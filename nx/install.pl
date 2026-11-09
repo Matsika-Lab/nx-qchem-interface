@@ -216,14 +216,24 @@ if ($dry) {
 if ( $new ne $orig ) {
     my $bak = "$colib.bak-" . strftime( "%Y%m%d%H%M%S", localtime );
     copy( $colib, $bak ) or die "Cannot back up $colib: $!";
-    open( my $fo, '>', $colib ) or die "Cannot write $colib: $!";
+
+    # Check the patched file in a scratch folder first, then replace the original with an
+    # atomic rename, so NewtonX jobs that load colib_perl.pm meanwhile never see a partial file.
+    my $tmpdir = "$nx/lib/.nxqc-install-$$";
+    make_path($tmpdir);
+    open( my $fo, '>', "$tmpdir/colib_perl.pm" ) or die "Cannot write $tmpdir/colib_perl.pm: $!";
     print $fo $new;
     close $fo;
-    my $check = `perl -I"$nx/lib" -e 'use colib_perl; my %p = prog_config(22); print \$p{progdyn}' 2>&1`;
+    my $check = `perl -I"$tmpdir" -I"$nx/lib" -e 'use colib_perl; my %p = prog_config(22); print \$p{progdyn}' 2>&1`;
     if ( $check ne "run-qchem-eom.pl" ) {
-        copy( $bak, $colib );
-        die "The patched colib_perl.pm does not load ($check). The original was restored.\n";
+        unlink "$tmpdir/colib_perl.pm";
+        rmdir $tmpdir;
+        die "The patched colib_perl.pm does not load ($check). $colib was not changed.\n";
     }
+    chmod( ( stat($colib) )[2] & 07777, "$tmpdir/colib_perl.pm" );
+    rename( "$tmpdir/colib_perl.pm", "$colib.nxqc-new" ) or die "Cannot stage the new file: $!";
+    rmdir $tmpdir;
+    rename( "$colib.nxqc-new", $colib ) or die "Cannot replace $colib: $!";
     print "Updated $colib (backup: $bak).\n";
 }
 else {
