@@ -15,10 +15,14 @@
 # Temple University, USA.
 # 2025-2026.
 #
+# The 2026 revision was developed with Claude Code (Anthropic) using the Claude
+# Opus 5.5 model; see the AI assistance note in README.md.
+#
 #====================================================================================
 #
 # NewtonX calls this script once per time step inside TEMP/. It
-#   1. writes the current geometry into JOB_NAD/qchem.inp,
+#   1. builds qchem.inp from the template JOB_NAD/qchem.inp (JOB_AD/qchem.inp for
+#      gradient-only steps) with the current geometry,
 #   2. runs Q-Chem (one or more EOM-CCSD jobs in a single input),
 #   3. writes epot, grad, grad.all and nad_vectors for NewtonX,
 #   4. keeps the sign of every coupling vector continuous in time.

@@ -14,6 +14,9 @@
 #   2. Copies run-qchem-eom.pl to $NX.
 #   3. Copies the test case MD-QCHEM-EOMIP-NAD to $NX/../test-nx (run it with $NX/test-nx.pl).
 #
+# Written with Claude Code (Anthropic) using the Claude Opus 5.5 model; see the AI
+# assistance note in README.md.
+#
 use strict;
 use warnings;
 use File::Basename qw(dirname);
