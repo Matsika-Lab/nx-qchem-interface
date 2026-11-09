@@ -30,6 +30,12 @@ my $archive_outputs  = 1; # Set to 1 to enable archiving Q-Chem outputs, 0 to di
 my $archive_interval = 1; # Archive every n timesteps (e.g., 1 = every step, 5 = every 5th step)
 my $nt               = 4; # Number of threads for Q-Chem
 my $print_extracted  = 1; # Set to 1 to print extracted data to STDOUT, 0 to suppress
+# Persistent per-pair phase reference. Q-Chem EOM-CC only computes NACs between the
+# CC_STATE_TO_OPT state and the others, so after a hop some pairs have no coupling at
+# t-dt and escalar cannot fix their sign. The last known phase-corrected vector of each
+# pair is kept here and used as the reference in that case.
+my $phase_ref_file   = "../INFO_RESTART/nac_phase_ref";
+my $phase_ref_warn   = 0.3; # Warn if |cos| against a stale reference is below this
 # ===================================================================================
 
 # We are using "strict." Thus, all variables must be declared.
@@ -563,9 +569,16 @@ sub treat_nacme {
 
         read_nacme();
 
+        # Align pairs that have no t-dt reference with their last known phase.
+        # escalar leaves such pairs untouched (nphase=+1), so this sign survives.
+        my %phase_ref = read_phase_ref();
+        align_unreferenced_pairs( \%phase_ref );
+
         write_nacme("nad_vectors");
         adjust_phase();
         copy( "nad_vectors", "newh" ) or die "Copy failed: $!";
+
+        update_phase_ref( \%phase_ref );
     }
 }
 
@@ -745,4 +758,146 @@ sub adjust_phase {
 
     if ( $lvprt >= 3 ) { copy( "escalar.log", "../$DEBUG/." ) or die "Copy failed: $!"; }
 
+}
+
+sub read_vector_file {
+    #
+    # Read a coupling file (ncoup*nat lines of x y z) into [nc][ia] = [x,y,z].
+    #
+    my ($file) = @_;
+    my @v;
+    open( my $fh, '<', $file ) or die "$mdle Cannot open $file: $!";
+    for ( my $k = 0; $k < $ncoup; $k++ ) {
+        for ( my $ja = 0; $ja < $nat; $ja++ ) {
+            my $l = <$fh>;
+            die "$mdle $file is truncated" unless defined $l;
+            $l =~ s/^\s+//;
+            $v[$k][$ja] = [ ( split( /\s+/, $l ) )[ 0 .. 2 ] ];
+        }
+    }
+    close($fh);
+    return @v;
+}
+
+sub pair_dot {
+    #
+    # Returns (u.v, |u|, |v|) for two [ia] = [x,y,z] vectors.
+    #
+    my ( $u, $v ) = @_;
+    my ( $uv, $uu, $vv ) = ( 0.0, 0.0, 0.0 );
+    for ( my $ja = 0; $ja < $nat; $ja++ ) {
+        for my $k ( 0 .. 2 ) {
+            $uv += $u->[$ja][$k] * $v->[$ja][$k];
+            $uu += $u->[$ja][$k]**2;
+            $vv += $v->[$ja][$k]**2;
+        }
+    }
+    return ( $uv, sqrt($uu), sqrt($vv) );
+}
+
+sub read_phase_ref {
+    #
+    #====================================================================================
+    #
+    # Read the persistent phase reference: for each pair, the last phase-corrected
+    # coupling vector and the time it was computed. Returns nc => {t, vec}.
+    # File format per pair: "pair <nc> <t>" header followed by nat lines of x y z.
+    #
+    #------------------------------------------------------------------------------------
+    #
+    my %ref;
+    return %ref unless -s $phase_ref_file;
+
+    open( my $fh, '<', $phase_ref_file ) or die "$mdle Cannot open $phase_ref_file: $!";
+    while ( my $l = <$fh> ) {
+        next unless $l =~ /^pair\s+(\d+)\s+(\S+)/;
+        my ( $k, $tref ) = ( $1, $2 );
+        my @vec;
+        for ( my $ja = 0; $ja < $nat; $ja++ ) {
+            my $d = <$fh>;
+            die "$mdle $phase_ref_file is truncated" unless defined $d;
+            $d =~ s/^\s+//;
+            $vec[$ja] = [ ( split( /\s+/, $d ) )[ 0 .. 2 ] ];
+        }
+        # Ignore references from the future (e.g. after restarting from an earlier point)
+        next if $tref > $t + 1e-6;
+        $ref{$k} = { t => $tref, vec => \@vec };
+    }
+    close($fh);
+    return %ref;
+}
+
+sub align_unreferenced_pairs {
+    #
+    #====================================================================================
+    #
+    # For every pair that is computed now but is zero in oldh (no t-dt reference for
+    # escalar), flip the sign of @h if it points against the last known phase-corrected
+    # vector of that pair.
+    #
+    #------------------------------------------------------------------------------------
+    #
+    my ($ref) = @_;
+    my @old = read_vector_file("oldh");
+    my $eps = 1e-6;
+
+    for ( my $k = 0; $k < $ncoup; $k++ ) {
+        my @cur = map { [ $hx[$k][$_], $hy[$k][$_], $hz[$k][$_] ] } 0 .. $nat - 1;
+        my ( undef, undef, $ncur ) = pair_dot( \@cur, \@cur );
+        my ( undef, $nold, undef ) = pair_dot( $old[$k], $old[$k] );
+        next if $ncur <= $eps;  # not computed now
+        next if $nold > $eps;   # escalar has a t-dt reference
+
+        if ( !exists $ref->{$k} ) {
+            print_STDOUT( "$mdle Coupling pair $k: no phase reference available (first appearance); sign kept as computed.\n", $istep, $kt );
+            next;
+        }
+
+        my ( $dot, $nref, undef ) = pair_dot( $ref->{$k}{vec}, \@cur );
+        next if $nref <= $eps;
+        my $cos  = $dot / ( $nref * $ncur );
+        my $sign = ( $cos < 0.0 ) ? -1.0 : 1.0;
+        for ( my $ja = 0; $ja < $nat; $ja++ ) {
+            $hx[$k][$ja] *= $sign;
+            $hy[$k][$ja] *= $sign;
+            $hz[$k][$ja] *= $sign;
+        }
+        print_STDOUT( sprintf( "$mdle Coupling pair %d: aligned to stored reference from t=%s (cos=%+.4f, phase=%+d)\n", $k, $ref->{$k}{t}, $cos, $sign ), $istep, $kt );
+        if ( abs($cos) < $phase_ref_warn ) {
+            print_STDOUT( sprintf( "$mdle WARNING: coupling pair %d is nearly orthogonal to its stored reference (|cos|=%.3f); phase assignment is unreliable.\n", $k, abs($cos) ), $istep, $kt );
+        }
+    }
+}
+
+sub update_phase_ref {
+    #
+    #====================================================================================
+    #
+    # Store the phase-corrected couplings (nad_vectors after escalar) of every pair
+    # computed at this step; keep older entries for pairs not computed now.
+    #
+    #------------------------------------------------------------------------------------
+    #
+    my ($ref) = @_;
+    my @cur = read_vector_file("nad_vectors");
+    my $eps = 1e-6;
+
+    for ( my $k = 0; $k < $ncoup; $k++ ) {
+        my ( undef, $n, undef ) = pair_dot( $cur[$k], $cur[$k] );
+        $ref->{$k} = { t => $t, vec => $cur[$k] } if $n > $eps;
+    }
+
+    my $dir = $phase_ref_file;
+    $dir =~ s{/[^/]*$}{};
+    make_path($dir) unless -d $dir;
+    my $tmp = "$phase_ref_file.tmp";
+    open( my $fh, '>', $tmp ) or die "$mdle Cannot write $tmp: $!";
+    for my $k ( sort { $a <=> $b } keys %$ref ) {
+        print $fh "pair $k $ref->{$k}{t}\n";
+        for ( my $ja = 0; $ja < $nat; $ja++ ) {
+            printf $fh "%22.12e %22.12e %22.12e\n", @{ $ref->{$k}{vec}[$ja] };
+        }
+    }
+    close($fh);
+    rename( $tmp, $phase_ref_file ) or die "$mdle Cannot rename $tmp: $!";
 }
