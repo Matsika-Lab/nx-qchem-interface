@@ -1,0 +1,15 @@
+$molecule
+1 1
+C 0 0 0
+H 1.09 0 0
+H -0.545 0.943968 0
+H -0.545 -0.943968 0
+$end
+
+$rem
+METHOD            EOM-CCSD
+EA_STATES [3]
+BASIS             6-31G*
+SYM_IGNORE        TRUE
+CC_DO_DYSON       TRUE
+$end

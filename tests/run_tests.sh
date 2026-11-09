@@ -191,6 +191,23 @@ if step $d $HERE/data/methaniminium_ee_negative/outputs/14.5000.out.gz 29; then
     && ok "EOM-EE state below the reference triggers a warning" || bad "no warning for an EOM-EE state below the reference"
 else bad "EOM-EE negative-excitation step stopped: $(tail -1 $d/../snap/14.5000.log)"; fi
 
+# 11. Initial conditions and spectra (run-qchem-eom-initcond.pl)
+IC=$(readlink -f $HERE/../run-qchem-eom-initcond.pl)
+ic_case() { # ic_case <method> <nfs> <expected oos list> <expected dE(eV) of state 2>
+  local d=$WORK/ic_$1; mkdir -p $d $WORK/DEBUG; cp -r $HERE/data/initcond_$1/JOB_AD $HERE/data/initcond_$1/geom $d/
+  printf ' &dat\n nis = 1\n nfs = %s\n lvprt = 1\n/\n' $2 > $d/initqp_input
+  ( cd $d && REPLAY_OUT=$HERE/data/initcond_$1/qchem_ic.out.gz perl "$IC" > log 2>&1 ) || { bad "initcond $1: stopped: $(tail -1 $d/log)"; return; }
+  local got="" k; for k in $(seq 2 $2); do got="$got $(cat $d/oos.$k)"; done
+  local de=$(awk 'NR==1{a=$1} NR==2{printf "%.4f", ($1-a)*27.211386245988}' $d/epot.2)
+  [ "${got# }" = "$3" ] && [ "$de" = "$4" ] && ok "initcond $1: energies and intensities ($got; state 2 at $de eV)" || bad "initcond $1: got intensities '$got', dE $de"
+}
+ic_case ee 4 "0 0.345891 0.00863" "8.5413"
+ic_case sf 3 "0 0" "5.8354"
+ic_case ip 4 "0.92698112 0.91764658 0.91791961" "10.4992"
+ic_case ea 4 "0.93334917 0.96000275 0.8569568" "-9.4103"
+d=$WORK/ic_ee; printf ' &dat\n nis = 2\n nfs = 4\n/\n' > $d/initqp_input
+( cd $d && REPLAY_OUT=$HERE/data/initcond_ee/qchem_ic.out.gz perl "$IC" > log2 2>&1 ) && bad "initcond: nis = 2 accepted" || { grep -q "only transitions from state 1" $d/log2 && ok "initcond: nis > 1 is refused with a clear message" || bad "initcond: nis = 2 wrong message"; }
+
 # 10. Documentation templates are the example inputs (one source of truth)
 for pair in ip:methane_cation_eomip_full ea:methyl_radical_eomea ee:methaniminium_eomee sf:ethylene_eomsf; do
   t=${pair%%:*}; ex=${pair#*:}

@@ -11,7 +11,8 @@
 #      sits between "# >>> NX-QCHEM" and "# <<< NX-QCHEM" markers, so running the
 #      installer again replaces it. An older hand-added prog 22 block is replaced too.
 #      A time-stamped backup of colib_perl.pm is kept.
-#   2. Copies run-qchem-eom.pl to $NX.
+#   2. Copies run-qchem-eom.pl (dynamics) and run-qchem-eom-initcond.pl (initial
+#      conditions and spectra) to $NX.
 #   3. Copies the test case MD-QCHEM-EOMIP-NAD to $NX/../test-nx (run it with $NX/test-nx.pl).
 #
 # Refactored and improved with Claude Code (Anthropic) using the Claude Opus 5.5
@@ -47,7 +48,7 @@ $block{prog_config} = <<'EOF';
   if (($prog >= 21.95) and ($prog < 22.05)){
       %progconf=(progname       => "qchem",
                  methodname     => "qchem-eom",
-                 ic             => "n",
+                 ic             => "y",
                  dyn            => "y",
                  hyb            => "n",
                  ip             => "n",
@@ -62,7 +63,7 @@ $block{prog_config} = <<'EOF';
                  cio_options_d  => "NULL",
                  cisc_options_d => "NULL",
                  cprog_d        => 0,
-                 progic         => "",
+                 progic         => "run-qchem-eom-initcond.pl",
                  progdyn        => "run-qchem-eom.pl");
   }
 EOF
@@ -71,6 +72,14 @@ $block{check_thirdparty} = <<'EOF';
      ## Q-CHEM ##
      #----------------------------------------------------------------------------
      if ($progname eq "qchem") {
+       if ($type eq "ic") {
+         my $qcexe = `which qchem 2>/dev/null`;
+         chomp($qcexe);
+         if ($qcexe eq ""){exit_error("qchem is not in your PATH. Load Q-Chem and run again.",$mdle);}
+         if (!defined $ENV{"QCSCRATCH"}){exit_error("\$QCSCRATCH is not defined. Set it and run again.",$mdle);}
+         if (!-s "$JAD/qchem.inp"){exit_error("Initial conditions with Q-Chem need the template $JAD/qchem.inp.",$mdle);}
+         print_STDOUT("\tQ-Chem: $qcexe\n\tTemplate: $JAD/qchem.inp\n");
+       }
        if ($type eq "dyn") {
          # Environment
          my $qcexe = `which qchem 2>/dev/null`;
@@ -240,9 +249,11 @@ else {
     print "$colib is already up to date.\n";
 }
 
-copy( "$repo/run-qchem-eom.pl", "$nx/run-qchem-eom.pl" ) or die "Cannot copy run-qchem-eom.pl to $nx: $!";
-chmod 0755, "$nx/run-qchem-eom.pl";
-print "Installed $nx/run-qchem-eom.pl.\n";
+for my $script ( "run-qchem-eom.pl", "run-qchem-eom-initcond.pl" ) {
+    copy( "$repo/$script", "$nx/$script" ) or die "Cannot copy $script to $nx: $!";
+    chmod 0755, "$nx/$script";
+    print "Installed $nx/$script.\n";
+}
 
 my $tsrc = "$here/test-nx";
 if ( -d $tsrc ) {

@@ -1,5 +1,7 @@
 #!/bin/bash
-# fake qchem for replay tests: writes the archived output given in $REPLAY_OUT to qchem.out
-# (accepts both "qchem -nt N inp out" and "qchem -save -nt N inp out savename")
-case "$REPLAY_OUT" in *.gz) zcat "$REPLAY_OUT" > qchem.out ;; *) cp "$REPLAY_OUT" qchem.out ;; esac
+# Stand-in for qchem in the tests: writes the archived output in $REPLAY_OUT to the
+# output file named on the command line (the argument ending in .out), else qchem.out.
+out=qchem.out
+for a in "$@"; do case "$a" in *.out) out="$a" ;; esac; done
+case "$REPLAY_OUT" in *.gz) zcat "$REPLAY_OUT" > "$out" ;; *) cp "$REPLAY_OUT" "$out" ;; esac
 exit ${REPLAY_RC:-0}
