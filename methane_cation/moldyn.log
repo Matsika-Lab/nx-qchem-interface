@@ -42,9 +42,9 @@
 ----------------------------------------------------------------------
 
 
-Newton-X path: /home/dakshitha/local/NX-2.4-B06/bin
+Newton-X path: /tmp/claude-1008/-home-dakshitha-qchem-interface-test/4f11c8f2-0650-400e-b49a-421a0ee4421c/scratchpad/nxbin
 
-Base directory: /home/dakshitha/qchem_interface_test/QCHEM_CH4_DYNAMIC/TRAJ1
+Base directory: /tmp/claude-1008/-home-dakshitha-qchem-interface-test/4f11c8f2-0650-400e-b49a-421a0ee4421c/scratchpad/e2e_methane
 
 STARTING MOLECULAR DYNAMICS   
 
@@ -57,7 +57,7 @@ STARTING MOLECULAR DYNAMICS
 	kt        = 1
 	dt        = 0.5000
 	t         = 0.0000
-	tmax      = 1000.0000
+	tmax      = 5.0000
 	nintc     = 9
 	mem       = 200
 	nxrestart = 0
@@ -118,10 +118,10 @@ moldyn.pl: Parameters for nonadiabatic dynamics (sh.inp):
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:33:08 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:22:22 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:33:08 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:33:21 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:22:22 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:22:35 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.12953593
@@ -137,6 +137,8 @@ Atom          X               Y               Z
 4         0.01125776      0.00074374     -0.04761773
 5        -0.00193471      0.00591670      0.05402284
 
+run-qchem-eom.pl: Coupling pair 1: no phase reference available (first appearance); sign kept as computed.
+run-qchem-eom.pl: Coupling pair 2: no phase reference available (first appearance); sign kept as computed.
 Non-adiabatic couplings (a.u.):
 --------------------------------------------------
 Coupling between state 1 and state 3:
@@ -156,7 +158,7 @@ Atom          X               Y               Z
 5        -0.02571089      0.00248873      0.00795229
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:21 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:22:35 EST 2026
 ---------------------------------------------------------------------------
 moldyn.pl: Surface hopping with SH routine.
 
@@ -176,10 +178,10 @@ moldyn.pl: Nonadiabatic dynamics information:
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:33:21 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:22:35 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:33:21 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:33:33 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:22:35 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:22:48 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.13181639
@@ -214,7 +216,7 @@ Atom          X               Y               Z
 5        -0.05840746      0.01162611      0.02778696
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:33 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:22:48 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -228,10 +230,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:33 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:33:34 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:22:48 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:33:34 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:33:47 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:22:48 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:23:01 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.13216270
@@ -266,7 +268,7 @@ Atom          X               Y               Z
 5        -0.08685137      0.03315201      0.03558111
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:47 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:23:01 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -280,10 +282,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:47 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:33:47 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:23:01 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:33:47 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:33:59 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:23:01 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:23:14 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.13095119
@@ -303,22 +305,22 @@ Non-adiabatic couplings (a.u.):
 --------------------------------------------------
 Coupling between state 1 and state 3:
 Atom          X               Y               Z
-1        -0.01354483     -0.03605282     -0.02041995
-2         0.00738767      0.02623035     -0.02517568
-3        -0.00610050      0.00279582     -0.00530301
-4         0.06307441      0.01393965     -0.00042870
-5        -0.05081674     -0.00691300      0.05132734
+1         0.01354490      0.03605316      0.02041955
+2        -0.00738769     -0.02623029      0.02517578
+3         0.00610071     -0.00279628      0.00530295
+4        -0.06307417     -0.01393964      0.00042923
+5         0.05081625      0.00691305     -0.05132750
 --------------------------------------------------
 Coupling between state 2 and state 3:
 Atom          X               Y               Z
-1         0.33842950     -0.05343980      0.02372447
-2        -0.11446142     -0.06088387      0.01175926
-3        -0.02299785      0.04970419     -0.01446761
-4        -0.08971351      0.00317711     -0.04657537
-5        -0.11125672      0.06144237      0.02555925
+1        -0.33842857      0.05344055     -0.02372481
+2         0.11446089      0.06088317     -0.01175923
+3         0.02299772     -0.04970423      0.01446784
+4         0.08971352     -0.00317704      0.04657516
+5         0.11125644     -0.06144244     -0.02555895
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:59 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:23:14 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -332,10 +334,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:33:59 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:34:00 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:23:14 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:34:00 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:34:12 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:23:14 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:23:27 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.12870667
@@ -370,7 +372,7 @@ Atom          X               Y               Z
 5        -0.13511003      0.09699763     -0.01157737
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:12 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:23:27 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -384,10 +386,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:12 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:34:13 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:23:27 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:34:13 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:34:25 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:23:27 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:23:40 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.12564927
@@ -422,7 +424,7 @@ Atom          X               Y               Z
 5         0.16089060     -0.14100076      0.12385883
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:25 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:23:40 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -436,10 +438,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:25 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:34:26 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:23:41 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:34:26 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:34:38 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:23:41 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:23:53 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.12138692
@@ -474,7 +476,7 @@ Atom          X               Y               Z
 5         0.20893704     -0.08589613      0.52472040
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:39 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:23:53 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -488,10 +490,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:39 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:34:39 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:23:54 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:34:39 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:34:52 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:23:54 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:24:07 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.11513559
@@ -526,7 +528,7 @@ Atom          X               Y               Z
 5        -0.26736708     -0.15418146     -0.09293544
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:52 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:24:07 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -540,10 +542,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:34:52 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:34:52 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:24:08 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:34:52 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:35:05 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:24:08 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:24:20 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.10692646
@@ -578,7 +580,7 @@ Atom          X               Y               Z
 5         0.16929803     -0.25581241      0.03964730
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:35:05 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:24:20 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -592,10 +594,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:35:05 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:35:06 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:24:21 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:35:06 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:35:19 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:24:21 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:24:36 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.09759866
@@ -630,7 +632,7 @@ Atom          X               Y               Z
 5        -0.09183875      0.19132919     -0.13777495
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:35:19 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:24:36 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -644,10 +646,10 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:35:19 EST 2025
 Starting normal electronic structure calculation
 
 ---------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:35:19 EST 2025
+Starting run-qchem-eom.pl at Mon Nov  9 11:24:37 EST 2026
 ---------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:35:19 EST 2025
-Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Wed Dec 10 17:35:33 EST 2025
+Starting qchem -nt 4 qchem.inp qchem.out  at Mon Nov  9 11:24:37 EST 2026
+Finished qchem -nt 4 qchem.inp qchem.out  successfuly at Mon Nov  9 11:24:51 EST 2026
 ---------------------------------------------------------------------------
 State energies (a.u.):
   State 1: -39.08795588
@@ -682,7 +684,7 @@ Atom          X               Y               Z
 5         0.07777457     -0.17030476      0.15347778
 --------------------------------------------------
 
-Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:35:33 EST 2025
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 11:24:51 EST 2026
 ---------------------------------------------------------------------------
  write_pair: In the next step, Nad coupling for the following pairs will
  be computed (1=ground state):
@@ -692,10 +694,5 @@ Finished run-qchem-eom.pl successfuly at Wed Dec 10 17:35:33 EST 2025
             FINISHING STEP 10, TIME 5.0000 fs on SURFACE 3            
        =======================================================================
 
-
-Starting normal electronic structure calculation
-
----------------------------------------------------------------------------
-Starting run-qchem-eom.pl at Wed Dec 10 17:35:33 EST 2025
----------------------------------------------------------------------------
-Starting qchem -nt 4 qchem.inp qchem.out  at Wed Dec 10 17:35:33 EST 2025
+moldyn.pl: End of dynamics 
+          ====================== NEWTON-X ends here ==================  

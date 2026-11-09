@@ -149,9 +149,9 @@ Total linear momentum:     -0.10428828   -0.23339408    0.01056883
 Total ang mom about cm:    -2.18823372    1.04716851   -0.14416531
 Total ang mom of cm:        0.00001413    0.00078256    0.01742094
  
- Wave function state  1:         0.00030132645797         0.00006620670108
- Wave function state  2:        -0.00260603086394         0.02071836286798
- Wave function state  3:         0.99978183833582        -0.00037228497008
+ Wave function state  1:         0.00030132644109         0.00006620570513
+ Wave function state  2:        -0.00260604986974         0.02071835862414
+ Wave function state  3:         0.99978183837446        -0.00037228452738
  
  ------------
  
@@ -187,9 +187,9 @@ Total linear momentum:     -0.10428828   -0.23339408    0.01056893
 Total ang mom about cm:    -2.18585930    1.04785400   -0.13130416
 Total ang mom of cm:        0.00001413    0.00078257    0.01742094
  
- Wave function state  1:        -0.00103166676678         0.00040604521884
- Wave function state  2:         0.00069359386153         0.01794465758377
- Wave function state  3:         0.99983803069673        -0.00043744165235
+ Wave function state  1:        -0.00103166953601         0.00040604372874
+ Wave function state  2:         0.00069356095077         0.01794466011245
+ Wave function state  3:         0.99983803067228        -0.00043744085344
  
  ------------
  
@@ -225,9 +225,9 @@ Total linear momentum:     -0.10428828   -0.23339408    0.01056883
 Total ang mom about cm:    -2.18285821    1.04828656   -0.11462451
 Total ang mom of cm:        0.00001413    0.00078256    0.01742094
  
- Wave function state  1:         0.00147217944320         0.00120718217240
- Wave function state  2:         0.00073155167075         0.01954767987101
- Wave function state  3:         0.99980674752232        -0.00044277707052
+ Wave function state  1:         0.00147217713505         0.00120718093276
+ Wave function state  2:         0.00073152041179         0.01954768227290
+ Wave function state  3:         0.99980674750345        -0.00044277635161
  
  ------------
  
@@ -263,9 +263,9 @@ Total linear momentum:     -0.10428838   -0.23339398    0.01056862
 Total ang mom about cm:    -2.17943220    1.04842126   -0.09469329
 Total ang mom of cm:        0.00001413    0.00078255    0.01742094
  
- Wave function state  1:         0.00001774309157        -0.00212233239954
- Wave function state  2:         0.01662048575523         0.04924534213340
- Wave function state  3:         0.99864582910564        -0.00081186926974
+ Wave function state  1:         0.00001774124628        -0.00212233339103
+ Wave function state  2:         0.01662045586966         0.04924534443641
+ Wave function state  3:         0.99864582948717        -0.00081186952749
  
  ------------
  
@@ -301,9 +301,9 @@ Total linear momentum:     -0.10428849   -0.23339387    0.01056852
 Total ang mom about cm:    -2.17597741    1.04806065   -0.07346307
 Total ang mom of cm:        0.00001413    0.00078254    0.01742093
  
- Wave function state  1:        -0.00497032188475         0.00897188158672
- Wave function state  2:         0.01311408290471         0.04832066099743
- Wave function state  3:         0.99869287071102        -0.00069698097987
+ Wave function state  1:        -0.00497032333838         0.00897188081250
+ Wave function state  2:         0.01311405383847         0.04832066323963
+ Wave function state  3:         0.99869287098372        -0.00069698128070
  
  ------------
  
@@ -339,9 +339,9 @@ Total linear momentum:     -0.10428849   -0.23339387    0.01056841
 Total ang mom about cm:    -2.17336146    1.04759174   -0.05851189
 Total ang mom of cm:        0.00001413    0.00078253    0.01742093
  
- Wave function state  1:         0.00517828384788         0.01287373985641
- Wave function state  2:        -0.00900315483857         0.03028404611384
- Wave function state  3:         0.99940445824348        -0.00002820421045
+ Wave function state  1:         0.00517828267945         0.01287373923568
+ Wave function state  2:        -0.00900318308483         0.03028404829340
+ Wave function state  3:         0.99940445793704        -0.00002820397028
  
  ------------
  
@@ -377,9 +377,9 @@ Total linear momentum:     -0.10428849   -0.23339387    0.01056831
 Total ang mom about cm:    -2.17151821    1.04730246   -0.05237507
 Total ang mom of cm:        0.00001413    0.00078252    0.01742093
  
- Wave function state  1:         0.00536939919327         0.01008291953327
- Wave function state  2:        -0.00077240959047         0.03068322965412
- Wave function state  3:         0.99946353276130        -0.00030621512165
+ Wave function state  1:         0.00536939822799         0.01008291902097
+ Wave function state  2:        -0.00077243642743         0.03068323172588
+ Wave function state  3:         0.99946353268737        -0.00030621495212
  
  ------------
  
@@ -415,18 +415,9 @@ Total linear momentum:     -0.10428849   -0.23339398    0.01056821
 Total ang mom about cm:    -2.17026662    1.04666307   -0.05386584
 Total ang mom of cm:        0.00001413    0.00078251    0.01742094
  
- Wave function state  1:         0.01144982822374         0.00721371088156
- Wave function state  2:         0.01088455175557         0.02478984482335
- Wave function state  3:         0.99954153165122        -0.00076186613167
+ Wave function state  1:         0.01144982740242         0.00721371044605
+ Wave function state  2:         0.01088452646492         0.02478984677759
+ Wave function state  3:         0.99954153189091        -0.00076186587323
  
  ------------
  
-STEP       11    Molecular dynamics on state  3    TIME =       5.50 fs
-Type of dyn. =    1    N. of hoppings =    0    N. of rejec. hoppings =    0
- 
-  New geometry: 
- C     6.0   -0.22813367    0.01747183   -0.04834788   12.00000000
- H     1.0   -1.09017539   -2.37031161    0.20461166    1.00782504
- H     1.0   -0.93823957    2.11002937    0.24999690    1.00782504
- H     1.0    1.66305752    0.19566310    1.53016223    1.00782504
- H     1.0    1.87975530   -0.17617230   -1.40665434    1.00782504
