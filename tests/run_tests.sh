@@ -102,7 +102,7 @@ expect_fail "template without SYM_IGNORE is refused" "SYM_IGNORE TRUE" $d
 d=$(new_traj methane_full e_key "nac_modes = full")
 expect_fail "unknown keyword in qchem.par is refused" "Unknown keyword 'nac_modes'" $d
 d=$(new_traj methane_full e_mode "nac_mode = all")
-expect_fail "invalid nac_mode is refused" "nac_mode must be full, carry or active" $d
+expect_fail "invalid nac_mode is refused" "nac_mode must be nx, full, carry or active" $d
 d=$(new_traj methane_full e_trunc); zcat $OUT0 | grep -v "Thank you very much" | { mkdir -p $WORK/trunc; gzip > $WORK/trunc/0.0000.out.gz; }
 expect_fail "Q-Chem job without normal termination stops the run" "did not finish normally" $d $WORK/trunc/0.0000.out.gz
 d=$(new_traj methane_full e_conv); zcat $OUT0 | sed '0,/Davidson procedure converged/s//Davidson failed to converge./' | { mkdir -p $WORK/conv; gzip > $WORK/conv/0.0000.out.gz; }
@@ -111,9 +111,59 @@ d=$(new_traj methane_full e_conv_ok "stop_on_unconverged = 0")
 if step $d $WORK/conv/0.0000.out.gz 0 && grep -q "WARNING: Q-Chem job 1 reports" $d/../snap/0.0000.log; then ok "stop_on_unconverged = 0 continues with a warning"
 else bad "stop_on_unconverged = 0 did not continue with a warning"; fi
 d=$(new_traj methane_full e_njobs); zcat $OUT0 | awk '/^Running Job 2 of 2/ {exit} {print}' | { mkdir -p $WORK/onejob; gzip > $WORK/onejob/0.0000.out.gz; }
-expect_fail "full mode with a missing job stops the run" "Expected 2 Q-Chem job(s)" $d $WORK/onejob/0.0000.out.gz
+expect_fail "a missing Q-Chem job stops the run" "Expected 2 Q-Chem job(s)" $d $WORK/onejob/0.0000.out.gz
 d=$(new_traj methane_full e_ad); mkdir -p $d/JOB_AD; echo 1 > $d/type_of_dyn.out
 expect_fail "type_of_dyn.out = 1 with JOB_AD selects adiabatic input" "does not handle adiabatic" $d
+
+d=$(new_traj methane_full e_vdoth1); printf ' &shinp\n vdoth = 1\n/\n' > $d/sh.inp
+expect_fail "vdoth = 1 (overlaps) is refused" "vdoth = 1 is not supported" $d
+d=$(new_traj methane_full e_nonac); sed -i '/CALC_NAC/d' $d/JOB_NAD/qchem.inp
+expect_fail "template without CALC_NAC is refused for vdoth = 0" "must contain 'CALC_NAC 2'" $d
+
+# 5. Following NewtonX's coupling selection (transmomin), nac_mode not set
+nadv_norms() { python3 -c "import sys,numpy as np; a=np.loadtxt(sys.argv[1]).reshape(-1,$2,3); print(' '.join('%.3f'%np.linalg.norm(v) for v in a))" $1 $2; }
+d=$(new_traj methane_full nx_two); printf 'CI\n1  3  1  1\n1  3  1  2\n' > $d/transmomin
+if step $d $WORK/onejob/0.0000.out.gz 0; then
+  n=$(nadv_norms $d/nad_vectors 5)
+  [ "$(grep -c '^@@@' $d/qchem.inp)" = "0" ] && [ "${n%% *}" = "0.000" ] \
+    && ok "nx: NewtonX asks for 3-1 and 3-2 only -> 1 job, 2-1 left at zero ($n)" || bad "nx: unexpected jobs or couplings ($n)"
+else bad "nx: step with restricted pairs stopped: $(tail -1 $d/../snap/0.0000.log)"; fi
+d=$(new_traj methane_full nx_21); printf 'CI\n1  2  1  1\n' > $d/transmomin
+if step $d $OUT0 0; then
+  n=$(nadv_norms $d/nad_vectors 5); set -- $n
+  grep -q 'CC_STATE_TO_OPT   \[1,1\]' $d/qchem.inp && [ "$1" != "0.000" ] && [ "$2" = "0.000" ] && [ "$3" = "0.000" ] \
+    && ok "nx: NewtonX asks for 2-1 only -> second job targets state 1; 3-1 and 3-2 zeroed ($n)" || bad "nx: 2-1 only gave ($n)"
+else bad "nx: step with 2-1 only stopped"; fi
+d=$(new_traj methane_full nx_override "nac_mode = full"); printf 'CI\n1  3  1  1\n' > $d/transmomin
+if step $d $OUT0 0; then
+  n=$(nadv_norms $d/nad_vectors 5); set -- $n
+  [ "$1" != "0.000" ] && [ "$2" != "0.000" ] && [ "$3" != "0.000" ] \
+    && ok "nac_mode = full in qchem.par overrides NewtonX's pair list ($n)" || bad "override failed ($n)"
+else bad "override step stopped"; fi
+
+# 6. Second run after a hop: gradient taken from grad.all, Q-Chem not re-run
+d=$(new_traj methane_full hop)
+if step $d $OUT0 0; then
+  echo "second run" > $d/which_run_is_that; sed -i 's/^\(5,0,3,\)3,/\12,/' $d/control.d
+  rm -f $d/qchem.out
+  ( cd $d && REPLAY_OUT=$OUT0 perl "$SCRIPT" > ../snap/second.log 2>&1 )
+  want=$(sed -n '6,10p' $d/grad.all | md5sum); got=$(md5sum < $d/grad)
+  [ ! -e $d/qchem.out ] && [ "$want" = "$got" ] && grep -q "Q-Chem not re-run" $d/../snap/second.log \
+    && ok "second run after a hop reuses the state-2 gradient without running Q-Chem" || bad "second run did not reuse grad.all"
+  # same, but the geometry changed: Q-Chem must run again and its output is archived separately
+  sed -i '1s/ \(-\?[0-9]\)/ 0\1/' $d/geom; sed -i '1s/^/ /' $d/geom
+  ( cd $d && REPLAY_OUT=$OUT0 perl "$SCRIPT" > ../snap/second2.log 2>&1 )
+  [ -e $d/qchem.out ] && [ -s $d/../INFO_RESTART/qchem_outputs/0.0000.after_hop.out.gz ] \
+    && ok "second run with a different geometry runs Q-Chem and archives it as <t>.after_hop.out.gz" || bad "second run with new geometry: $(tail -1 $d/../snap/second2.log)"
+else bad "second-run test: first step failed"; fi
+
+# 7. vdoth = 2 (time-dependent Baeck-An): one gradient-only job, no couplings
+d=$(new_traj methane_force tdba); printf ' &shinp\n vdoth = 2\n/\n' > $d/sh.inp
+if step $d $HERE/data/methane_force/outputs/0.0000.out.gz 0; then
+  g=$(head -1 $d/grad | awk '{printf "%.8f %.8f %.8f", $1, $2, $3}'); n=$(nadv_norms $d/nad_vectors 5)
+  grep -q 'JOBTYPE *FORCE' $d/qchem.inp && ! grep -q CALC_NAC $d/qchem.inp && [ "$g" = "-0.06288588 0.00003134 -0.00001470" ] && [ "$n" = "0.000 0.000 0.000" ] \
+    && ok "vdoth = 2: gradient-only input, Full Analytical Gradient read, couplings left to NewtonX" || bad "vdoth = 2: grad '$g' couplings '$n'"
+else bad "vdoth = 2 step stopped: $(tail -1 $d/../snap/0.0000.log)"; fi
 
 echo "$pass passed, $fail failed"
 [ $fail -eq 0 ]

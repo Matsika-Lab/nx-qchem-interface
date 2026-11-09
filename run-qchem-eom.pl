@@ -41,7 +41,7 @@ use colib_perl;
 # ===================================================================================
 my %par = (
     nt                  => 4,       # threads for Q-Chem (qchem -nt)
-    nac_mode            => "full",  # full | carry | active (see README)
+    nac_mode            => "nx",    # nx | full | carry | active (see README)
     reuse_guess         => 1,       # start each SCF from the previous step's orbitals
     archive             => 1,       # keep each step's Q-Chem output in INFO_RESTART/qchem_outputs
     archive_interval    => 1,       # archive every n-th step
@@ -50,7 +50,7 @@ my %par = (
     phase_warn          => 0.3,     # warn if |cos| against a stored phase reference is below this
     stop_on_unconverged => 1,       # stop the trajectory if Q-Chem reports a convergence failure
 );
-my %allowed_nac_mode = ( full => 1, carry => 1, active => 1 );
+my %allowed_nac_mode = ( nx => 1, full => 1, carry => 1, active => 1 );
 # ===================================================================================
 
 my ( $mld, $mdle, $BASEDIR, $DEBUG, $JAD, $JND, $ctd, $fpar );
@@ -61,12 +61,14 @@ my ( @symb, @zn, @x, @y, @z, @Mass );
 my ( $typeofinput, $type );
 my ( @epot, $mem, $retval, %progconf );
 my ( $ncoup, @gx, @gy, @gz, @hx, @hy, @hz );
-my ( @job_targets, @job_text, %computed_pair );
+my ( @job_targets, @job_text, %computed_pair, %wanted_pair );
+my ( $vdoth, $run_flag );
 
 define_variables();
 read_parameters();
 write_debug1();
 read_geom();
+exit 0 if reuse_gradient_after_hop();
 prepare_input();
 run_program();
 split_jobs();
@@ -103,6 +105,17 @@ sub define_variables {
 
     # Q-Chem scratch folder kept between steps (orbitals only), unique per trajectory
     $save_name = "nxqc_" . substr( md5_hex($BASEDIR), 0, 12 );
+
+    # "second run" = NewtonX calls the interface again at the same geometry after a hop
+    $run_flag = read_single_value( "which_run_is_that", "" );
+
+    # How NewtonX gets the couplings (sh.inp): 0 = coupling vectors from the interface,
+    # 2 = time-dependent Baeck-An (NewtonX computes them from the energies).
+    $vdoth = getkeyword( "sh.inp", "vdoth", 0 );
+    if ( $vdoth != 0 && $vdoth != 2 ) {
+        die "$mdle vdoth = $vdoth is not supported: Q-Chem EOM-CC provides coupling vectors (vdoth = 0) "
+          . "but no wavefunction overlaps. Use vdoth = 0, or vdoth = 2 for time-dependent Baeck-An couplings.\n";
+    }
 }
 
 sub read_parameters {
@@ -127,7 +140,7 @@ sub read_parameters {
         }
         close($fh);
     }
-    die "$mdle nac_mode must be full, carry or active (got '$par{nac_mode}')\n"
+    die "$mdle nac_mode must be nx, full, carry or active (got '$par{nac_mode}')\n"
         unless $allowed_nac_mode{ $par{nac_mode} };
     for my $k (qw(nt archive_interval)) {
         die "$mdle $k must be a positive integer\n" unless $par{$k} =~ /^\d+$/ && $par{$k} > 0;
@@ -163,18 +176,96 @@ sub read_geom {
     die "$mdle geom has $ia atoms, control.d says $nat\n" unless $ia == $nat;
 }
 
+sub reuse_gradient_after_hop {
+    #
+    # After a hop NewtonX calls the interface again at the same geometry to get the
+    # gradient of the new state. A coupling job already printed the gradients of all
+    # states (grad.all), and they do not depend on which state the job targeted, so
+    # Q-Chem does not need to run again. Returns 1 if grad was written from grad.all.
+    #
+    return 0 unless $run_flag eq "second run";
+    return 0 unless -s "grad.all" && -s "geom.last_qchem";
+    open( my $f1, '<', "geom" ) or return 0;
+    open( my $f2, '<', "geom.last_qchem" ) or return 0;
+    my $same = join( "", <$f1> ) eq join( "", <$f2> );
+    close $f1;
+    close $f2;
+    return 0 unless $same;
+
+    open( my $fh, '<', "grad.all" ) or return 0;
+    my @all = grep {/\S/} <$fh>;
+    close $fh;
+    return 0 unless @all == $nstat * $nat;
+    my @g = @all[ ( $nstatdyn - 1 ) * $nat .. $nstatdyn * $nat - 1 ];
+    my $norm = 0.0;
+    for (@g) { $norm += $_**2 for split; }
+    return 0 unless $norm > 0.0;    # gradient of this state not available (vdoth = 2 runs)
+
+    open( my $fo, '>', "grad" ) or die "$mdle Cannot write grad";
+    print $fo @g;
+    close $fo;
+    print_STDOUT( "$mdle Gradient of state $nstatdyn after the hop taken from the coupling job of this step; Q-Chem not re-run.\n", $istep, $kt );
+    return 1;
+}
+
+sub read_transmomin {
+    #
+    # Pairs NewtonX asks for this step (built from jiri.inp and THRES in control.dyn).
+    # Format: a "CI" line, then "1 i 1 j" per pair. Without the file, all pairs are wanted.
+    #
+    my %w;
+    if ( -s "transmomin" ) {
+        open( my $fh, '<', "transmomin" ) or die "$mdle Cannot open transmomin";
+        while ( my $l = <$fh> ) {
+            my @f = split( ' ', $l );
+            next unless @f == 4 && $f[1] =~ /^\d+$/ && $f[3] =~ /^\d+$/;
+            my ( $i, $j ) = ( $f[1], $f[3] );
+            next if $i == $j || $i > $nstat || $j > $nstat;
+            $w{ pair_index( $i, $j ) } = 1;
+        }
+        close $fh;
+    }
+    else {
+        $w{$_} = 1 for 0 .. $ncoup - 1;
+    }
+    return %w;
+}
+
 sub job_targets {
     #
     # States whose CC_STATE_TO_OPT job is run this step. Each job gives the couplings
-    # between its target state and every other state. The first job always targets the
-    # active state (its gradient drives the dynamics). In "full" mode, jobs are added
-    # for all other states but one, which covers every pair with nstat-1 jobs.
+    # between its target state and every other state, and the gradients of all states.
+    # The first job always targets the active state. Then:
+    #   full          jobs for all other states but one (every pair, nstat-1 jobs)
+    #   nx            the fewest extra jobs that cover the pairs NewtonX asked for
+    #   carry/active  no extra jobs
+    # With vdoth = 2 only the active state's gradient is needed (one job, no couplings).
     #
     my @targets = ($nstatdyn);
+    return @targets if $vdoth == 2;
     if ( $par{nac_mode} eq "full" ) {
         my @others = grep { $_ != $nstatdyn } 1 .. $nstat;
         pop @others;
         push @targets, @others;
+    }
+    elsif ( $par{nac_mode} eq "nx" ) {
+        my %left = %wanted_pair;
+        my $cover = sub {
+            my ($s) = @_;
+            delete $left{ pair_index( $s, $_ ) } for grep { $_ != $s } 1 .. $nstat;
+        };
+        $cover->($nstatdyn);
+        while (%left) {
+            my ( $best, $nbest ) = ( 0, 0 );
+            for my $s ( 1 .. $nstat ) {
+                next if grep { $_ == $s } @targets;
+                my $n = grep { $left{ pair_index( $s, $_ ) } } grep { $_ != $s } 1 .. $nstat;
+                ( $best, $nbest ) = ( $s, $n ) if $n > $nbest;
+            }
+            last unless $best;
+            push @targets, $best;
+            $cover->($best);
+        }
     }
     return @targets;
 }
@@ -209,8 +300,24 @@ sub prepare_input {
             $symb[$i], $x[$i] * $au2ang, $y[$i] * $au2ang, $z[$i] * $au2ang );
     }
 
+    # Pairs whose couplings are wanted this step
+    if ( $par{nac_mode} eq "nx" ) { %wanted_pair = read_transmomin(); }
+    else                          { %wanted_pair = map { $_ => 1 } 0 .. $ncoup - 1; }
+    %wanted_pair = () if $vdoth == 2;
+
+    my $has_nac = grep { /^\s*CALC_NAC\b/i } @tpl;
+    die "$mdle $qchem_template must contain 'CALC_NAC 2' for coupling vectors (vdoth = 0 in sh.inp)\n"
+        if $vdoth == 0 && !$has_nac;
+
     @job_targets = job_targets();
     my $have_guess = $par{reuse_guess} && -s saved_orbitals();
+    if ( $par{print_extracted} || $lvprt >= 2 ) {
+        my @p = map { pair_name($_) } sort { $a <=> $b } keys %wanted_pair;
+        my $what = $vdoth == 2 ? "gradient only (vdoth = 2, couplings from NewtonX)"
+                                : "couplings wanted: " . ( @p ? join( " ", @p ) : "none" );
+        print_STDOUT( "$mdle nac_mode = $par{nac_mode}; " . scalar(@job_targets)
+            . " Q-Chem job(s), target state(s) " . join( ",", @job_targets ) . "; $what\n", $istep, $kt );
+    }
 
     my @jobs;
     for my $j ( 0 .. $#job_targets ) {
@@ -234,11 +341,13 @@ sub prepare_input {
             if ( $in_rem && $line =~ /^\s*\$end/i ) {
                 $out .= "CC_STATE_TO_OPT   [1,$target]\n";
                 $out .= "SCF_GUESS         READ\n" if $read_mo;
+                $out .= "JOBTYPE           FORCE\n" if $vdoth == 2;
                 $out .= $line;
                 $in_rem = 0;
                 next;
             }
             next if $in_rem && $line =~ /^\s*(CC_STATE_TO_OPT|SCF_GUESS)\b/i;
+            next if $in_rem && $vdoth == 2 && $line =~ /^\s*(CALC_NAC|JOBTYPE)\b/i;
             $out .= $line;
         }
         push @jobs, $out;
@@ -290,6 +399,7 @@ sub run_program {
         die "$mdle Q-Chem failed\n";
     }
     prune_saved_scratch() if $par{reuse_guess};
+    copy( "geom", "geom.last_qchem" ) or die "$mdle Cannot copy geom: $!";
 }
 
 sub prune_saved_scratch {
@@ -312,11 +422,13 @@ sub archive_output {
     return unless $par{archive} && ( $istep % $par{archive_interval} == 0 );
     my $dir = "../INFO_RESTART/qchem_outputs";
     make_path($dir) unless -d $dir;
+    # A second run after a hop gets its own name so it does not replace the step's output
+    my $name = ( $run_flag eq "second run" ) ? "$t.after_hop.out" : "$t.out";
     if ( $par{archive_gzip} ) {
-        gzip( $qchem_out => "$dir/$t.out.gz" ) or die "$mdle gzip of $qchem_out failed: $GzipError\n";
+        gzip( $qchem_out => "$dir/$name.gz" ) or die "$mdle gzip of $qchem_out failed: $GzipError\n";
     }
     else {
-        copy( $qchem_out, "$dir/$t.out" ) or die "$mdle Cannot copy $qchem_out to $dir: $!";
+        copy( $qchem_out, "$dir/$name" ) or die "$mdle Cannot copy $qchem_out to $dir: $!";
     }
 }
 
@@ -426,6 +538,17 @@ sub read_gradients {
             }
         }
     }
+    if ( !$have{$nstatdyn} ) {
+        # Gradient-only job (vdoth = 2): "Full Analytical Gradient" table with x, y, z as rows
+        # and atoms as columns, printed in blocks of up to 6 atoms.
+        my $g = read_full_gradient( $job_text[0] );
+        if ($g) {
+            for my $ia ( 0 .. $nat - 1 ) {
+                ( $gx[ $nstatdyn - 1 ][$ia], $gy[ $nstatdyn - 1 ][$ia], $gz[ $nstatdyn - 1 ][$ia] ) = @{ $g->[$ia] };
+            }
+            $have{$nstatdyn} = 1;
+        }
+    }
     die "$mdle No gradient found for the active state $nstatdyn in $qchem_out\n" unless $have{$nstatdyn};
 
     open( my $f1, '>', "grad.all" ) or die "$mdle Cannot write grad.all";
@@ -450,6 +573,29 @@ sub read_gradients {
     }
 }
 
+sub read_full_gradient {
+    #
+    # Last "Full Analytical Gradient" table of a job; returns [ia] = [x,y,z] or undef.
+    #
+    my ($jl) = @_;
+    my $start;
+    for my $i ( 0 .. $#$jl ) { $start = $i if $jl->[$i] =~ /Full Analytical Gradient/; }
+    return undef unless defined $start;
+    my @g;
+    my $i = $start + 1;
+    while ( @g < $nat ) {
+        my @cols = split( ' ', $jl->[$i] // "" );
+        return undef unless @cols && !grep { !/^\d+$/ } @cols;    # header line of atom numbers
+        for my $c ( 0 .. 2 ) {
+            my @f = split( ' ', $jl->[ $i + 1 + $c ] // "" );
+            return undef unless @f == @cols + 1;
+            $g[ $cols[$_] - 1 ][$c] = $f[ $_ + 1 ] for 0 .. $#cols;
+        }
+        $i += 4;
+    }
+    return \@g;
+}
+
 sub pair_index {
     #
     # NewtonX lower-triangular index (0-based) of the pair (i, j), i > j.
@@ -459,8 +605,18 @@ sub pair_index {
     return ( $i - 1 ) * ( $i - 2 ) / 2 + $j - 1;
 }
 
+sub pair_name {
+    #
+    # "j-i" label of pair index k.
+    #
+    my ($k) = @_;
+    for my $i ( 2 .. $nstat ) {
+        for my $j ( 1 .. $i - 1 ) { return "$j-$i" if pair_index( $i, $j ) == $k; }
+    }
+    return "?";
+}
+
 sub treat_nacme {
-    my $run_flag = read_single_value( "which_run_is_that", "" );
     return if $run_flag eq "second run";
 
     for my $k ( 0 .. $ncoup - 1 ) {
@@ -468,6 +624,14 @@ sub treat_nacme {
     }
     if ( -s "nad_vectors" ) { copy( "nad_vectors", "oldh" ) or die "$mdle Copy of nad_vectors to oldh failed: $!"; }
     else                    { write_vectors("oldh"); }
+
+    if ( $vdoth == 2 ) {
+        # NewtonX computes time-dependent Baeck-An couplings from the energies itself.
+        %computed_pair = ();
+        write_vectors("nad_vectors");
+        copy( "nad_vectors", "newh" ) or die "$mdle Copy failed: $!";
+        return;
+    }
 
     read_nacme();
 
@@ -509,12 +673,22 @@ sub read_nacme {
             }
         }
     }
-    for my $s ( grep { $_ != $nstatdyn } 1 .. $nstat ) {
-        die "$mdle Coupling between active state $nstatdyn and state $s missing in $qchem_out\n"
-            unless $computed_pair{ pair_index( $nstatdyn, $s ) };
+    # Every pair that the jobs should have produced must be there
+    my %expect;
+    if ( $par{nac_mode} eq "nx" ) { %expect = %wanted_pair; }
+    else {
+        for my $s (@job_targets) { $expect{ pair_index( $s, $_ ) } = 1 for grep { $_ != $s } 1 .. $nstat; }
     }
-    if ( $par{nac_mode} eq "full" && keys %computed_pair != $ncoup ) {
-        die "$mdle nac_mode = full but only " . scalar( keys %computed_pair ) . " of $ncoup couplings were found\n";
+    for my $k ( sort { $a <=> $b } keys %expect ) {
+        die "$mdle Coupling " . pair_name($k) . " missing in $qchem_out\n" unless $computed_pair{$k};
+    }
+    # nac_mode = nx: pairs NewtonX did not ask for are zero (NewtonX coupling models)
+    if ( $par{nac_mode} eq "nx" ) {
+        for my $k ( keys %computed_pair ) {
+            next if $wanted_pair{$k};
+            delete $computed_pair{$k};
+            for my $ia ( 0 .. $nat - 1 ) { $hx[$k][$ia] = $hy[$k][$ia] = $hz[$k][$ia] = 0.0; }
+        }
     }
 }
 
