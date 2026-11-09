@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Compare trajectories that start from the same initial condition (for example the
 three coupling modes).
 

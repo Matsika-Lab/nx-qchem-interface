@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use this interface, please cite it as below, together with NewtonX and Q-Chem."
+title: "NewtonX-Q-Chem interface for EOM-CCSD surface hopping"
+abstract: "A NewtonX 2.x interface (run-qchem-eom.pl) to Q-Chem equation-of-motion coupled-cluster methods (EOM-IP, EOM-EA, EOM-EE and EOM-SF-CCSD) for trajectory surface hopping, with nonadiabatic coupling vectors or time-dependent Baeck-An couplings."
+type: software
+authors:
+  - given-names: Dakshitha
+    family-names: Abeygunewardane
+    affiliation: "Temple University"
+  - given-names: Spiridoula
+    family-names: Matsika
+    affiliation: "Temple University"
+repository-code: "https://github.com/Matsika-Lab/nx-qchem-interface"
+license: GPL-3.0-or-later
+keywords:
+  - surface hopping
+  - nonadiabatic dynamics
+  - EOM-CCSD
+  - NewtonX
+  - Q-Chem
+references:
+  - type: article
+    title: "Calculations of non-adiabatic couplings within equation-of-motion coupled-cluster framework: Theory, implementation, and validation against multi-reference methods"
+    authors:
+      - family-names: Faraji
+        given-names: Shirin
+      - family-names: Matsika
+        given-names: Spiridoula
+      - family-names: Krylov
+        given-names: Anna I.
+    journal: "The Journal of Chemical Physics"
+    volume: 148
+    start: "044103"
+    year: 2018
+    doi: "10.1063/1.5009433"
+  - type: article
+    title: "Analytic evaluation of the nonadiabatic coupling vector between excited states using equation-of-motion coupled-cluster theory"
+    authors:
+      - family-names: Tajti
+        given-names: Attila
+      - family-names: Szalay
+        given-names: Péter G.
+    journal: "The Journal of Chemical Physics"
+    volume: 131
+    start: "124104"
+    year: 2009
+    doi: "10.1063/1.3232011"

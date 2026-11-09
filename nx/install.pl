@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 # Install the Q-Chem interface into a NewtonX 2.x installation.
 #
