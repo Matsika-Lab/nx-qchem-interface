@@ -502,9 +502,18 @@ sub read_energy {
     @epot = ();
     my @jl = @{ $job_text[0] };
     for my $i ( 0 .. $#jl - 1 ) {
-        next unless $jl[$i] =~ /^\s*EOM(?:IP|EA|EE|SF|DIP|DEA|DSF)\s+transition\s+\d+\//;
+        next unless $jl[$i] =~ /^\s*EOM(IP|EA|EE|SF|DIP|DEA|DSF)\s+transition\s+(\d+)\//;
+        my ( $kind, $n ) = ( $1, $2 );
         if ( $jl[ $i + 1 ] =~ /Total energy\s*=\s*(-?\d+\.\d+)\s+a\.u\./ ) {
             push @epot, $1;
+        }
+        # EOM-EE states lie above the CCSD reference. A negative excitation energy means the
+        # reference is no longer the ground state (bond breaking, crossing with S0), where
+        # EOM-EE is not valid; NewtonX usually stops soon after on the energy jump.
+        if ( $kind eq "EE" && $jl[ $i + 1 ] =~ /Excitation energy\s*=\s*(-[\d.]+)\s*eV/ ) {
+            print_STDOUT( "$mdle WARNING: EOM-EE state $n lies below the CCSD reference (excitation energy $1 eV). "
+                  . "The reference is no longer the ground state, and EOM-EE cannot describe this region "
+                  . "(for example bond breaking or a crossing with S0). Consider EOM-SF.\n", $istep, $kt );
         }
     }
     die "$mdle Expected at least $nstat EOM states in $qchem_out, found " . scalar(@epot) . "\n"

@@ -183,5 +183,19 @@ if REPLAY_RC=1 step $d $WORK/crash/0.0000.out.gz 0; then bad "failing Q-Chem run
 elif grep -q "Q-Chem reports: CCSD iterations did not converge. | Key 'f2_oo_float' is not known." $d/../snap/0.0000.log; then ok "failing Q-Chem run stops with Q-Chem's own reason quoted"
 else bad "failing Q-Chem run: reason not quoted ($(grep 'Q-Chem reports' $d/../snap/0.0000.log))"; fi
 
+# 9b. EOM-EE state below the CCSD reference (methaniminium at 14.5 fs, C-N 2.16 A): warning
+d=$(new_traj methaniminium_ee_negative ee_neg)
+if step $d $HERE/data/methaniminium_ee_negative/outputs/14.5000.out.gz 29; then
+  grep -q "EOM-EE state 1 lies below the CCSD reference (excitation energy -1.3560 eV)" $d/../snap/14.5000.log \
+    && ok "EOM-EE state below the reference triggers a warning" || bad "no warning for an EOM-EE state below the reference"
+else bad "EOM-EE negative-excitation step stopped: $(tail -1 $d/../snap/14.5000.log)"; fi
+
+# 10. Documentation templates are the example inputs (one source of truth)
+for pair in ip:methane_cation_eomip_full ea:methyl_radical_eomea ee:methaniminium_eomee sf:ethylene_eomsf; do
+  t=${pair%%:*}; ex=${pair#*:}
+  cmp -s $HERE/../docs/templates/$t.qchem.inp $HERE/../examples/$ex/JOB_NAD/qchem.inp \
+    && ok "docs/templates/$t.qchem.inp matches examples/$ex" || bad "docs/templates/$t.qchem.inp differs from examples/$ex/JOB_NAD/qchem.inp"
+done
+
 echo "$pass passed, $fail failed"
 [ $fail -eq 0 ]
