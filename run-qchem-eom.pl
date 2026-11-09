@@ -819,8 +819,8 @@ sub read_phase_ref {
             $d =~ s/^\s+//;
             $vec[$ja] = [ ( split( /\s+/, $d ) )[ 0 .. 2 ] ];
         }
-        # Ignore references from the future (e.g. after restarting from an earlier point)
-        next if $tref > $t + 1e-6;
+        # Ignore references from this step or later (reused directory, restart from an earlier point)
+        next if $tref > $t - 1e-6;
         $ref{$k} = { t => $tref, vec => \@vec };
     }
     close($fh);
@@ -846,7 +846,7 @@ sub align_unreferenced_pairs {
         my ( undef, undef, $ncur ) = pair_dot( \@cur, \@cur );
         my ( undef, $nold, undef ) = pair_dot( $old[$k], $old[$k] );
         next if $ncur <= $eps;  # not computed now
-        next if $nold > $eps;   # escalar has a t-dt reference
+        next if $nold * $ncur > $eps;  # escalar has a t-dt reference (same test as escalar)
 
         if ( !exists $ref->{$k} ) {
             print_STDOUT( "$mdle Coupling pair $k: no phase reference available (first appearance); sign kept as computed.\n", $istep, $kt );
