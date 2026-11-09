@@ -62,13 +62,14 @@ my ( $typeofinput, $type );
 my ( @epot, $mem, $retval, %progconf );
 my ( $ncoup, @gx, @gy, @gz, @hx, @hy, @hz );
 my ( @job_targets, @job_text, %computed_pair, %wanted_pair );
-my ( $vdoth, $run_flag );
+my ( $vdoth, $run_flag, $grad_only );
 
 define_variables();
 read_parameters();
 write_debug1();
 read_geom();
 exit 0 if reuse_gradient_after_hop();
+find_typeofinput();
 prepare_input();
 run_program();
 split_jobs();
@@ -242,7 +243,7 @@ sub job_targets {
     # With vdoth = 2 only the active state's gradient is needed (one job, no couplings).
     #
     my @targets = ($nstatdyn);
-    return @targets if $vdoth == 2;
+    return @targets if $grad_only;
     if ( $par{nac_mode} eq "full" ) {
         my @others = grep { $_ != $nstatdyn } 1 .. $nstat;
         pop @others;
@@ -303,14 +304,19 @@ sub prepare_input {
     # Pairs whose couplings are wanted this step
     if ( $par{nac_mode} eq "nx" ) { %wanted_pair = read_transmomin(); }
     else                          { %wanted_pair = map { $_ => 1 } 0 .. $ncoup - 1; }
-    %wanted_pair = () if $vdoth == 2;
+    %wanted_pair = () if $grad_only;
+
+    # NewtonX wants no couplings this step (all gaps above THRES in control.dyn):
+    # a gradient-only job is enough and costs about a third less.
+    my $no_pairs = ( !$grad_only && $par{nac_mode} eq "nx" && !%wanted_pair ) ? 1 : 0;
+    $grad_only = 1 if $no_pairs;
 
     my $has_nac = grep { /^\s*CALC_NAC\b/i } @tpl;
     die "$mdle $qchem_template must contain 'CALC_NAC 2' for coupling vectors (vdoth = 0 in sh.inp)\n"
-        if $vdoth == 0 && !$has_nac;
+        if !$grad_only && !$has_nac;
 
     # The Q-Chem manuals (5.4 to 6.2) list EOM-CC couplings for EE, IP and EA only.
-    if ( $vdoth == 0 && $istep == 0 && $run_flag ne "second run" && grep { /^\s*SF_STATES\b/i } @tpl ) {
+    if ( !$grad_only && $istep == 0 && $run_flag ne "second run" && grep { /^\s*SF_STATES\b/i } @tpl ) {
         print_STDOUT( "$mdle WARNING: EOM-SF coupling vectors are computed by Q-Chem but are not documented "
               . "(the Q-Chem manual lists EOM-CC couplings for EE, IP and EA). Check them before production use, "
               . "or use vdoth = 2 (couplings from energies).\n", $istep, $kt );
@@ -320,7 +326,8 @@ sub prepare_input {
     my $have_guess = $par{reuse_guess} && -s saved_orbitals();
     if ( $par{print_extracted} || $lvprt >= 2 ) {
         my @p = map { pair_name($_) } sort { $a <=> $b } keys %wanted_pair;
-        my $what = $vdoth == 2 ? "gradient only (vdoth = 2, couplings from NewtonX)"
+        my $what = $grad_only ? ( $no_pairs ? "no couplings wanted, gradient only"
+                                : $vdoth == 2 ? "gradient only (vdoth = 2, couplings from NewtonX)" : "gradient only (adiabatic step, JOB_AD)" )
                                 : "couplings wanted: " . ( @p ? join( " ", @p ) : "none" );
         print_STDOUT( "$mdle nac_mode = $par{nac_mode}; " . scalar(@job_targets)
             . " Q-Chem job(s), target state(s) " . join( ",", @job_targets ) . "; $what\n", $istep, $kt );
@@ -348,13 +355,13 @@ sub prepare_input {
             if ( $in_rem && $line =~ /^\s*\$end/i ) {
                 $out .= "CC_STATE_TO_OPT   [1,$target]\n";
                 $out .= "SCF_GUESS         READ\n" if $read_mo;
-                $out .= "JOBTYPE           FORCE\n" if $vdoth == 2;
+                $out .= "JOBTYPE           FORCE\n" if $grad_only;
                 $out .= $line;
                 $in_rem = 0;
                 next;
             }
             next if $in_rem && $line =~ /^\s*(CC_STATE_TO_OPT|SCF_GUESS)\b/i;
-            next if $in_rem && $vdoth == 2 && $line =~ /^\s*(CALC_NAC|JOBTYPE)\b/i;
+            next if $in_rem && $grad_only && $line =~ /^\s*(CALC_NAC|JOBTYPE)\b/i;
             $out .= $line;
         }
         push @jobs, $out;
@@ -373,7 +380,8 @@ sub saved_orbitals {
 
 sub find_typeofinput {
     #
-    # Adiabatic (JOB_AD) or nonadiabatic (JOB_NAD) input.
+    # Adiabatic (JOB_AD) or nonadiabatic (JOB_NAD) input. NewtonX uses JOB_AD for
+    # adiabatic steps (type 1 in type_of_dyn.out) and whenever vdoth != 0.
     #
     my $typeout = "type_of_dyn.out";
     $type = 2;
@@ -386,13 +394,16 @@ sub find_typeofinput {
     }
     if    ( -e $JAD && !-e $JND ) { $typeofinput = "jad"; }
     elsif ( !-e $JAD && -e $JND ) { $typeofinput = "jnd"; }
-    elsif ( -e $JAD && -e $JND )  { $typeofinput = ( $type == 1 ) ? "jad" : "jnd"; }
+    elsif ( -e $JAD && -e $JND )  { $typeofinput = ( $type == 1 || $vdoth != 0 ) ? "jad" : "jnd"; }
     else                          { die "$mdle Neither $JAD nor $JND exists\n"; }
+
+    # JOB_AD (adiabatic steps, mixed dynamics with THRES, and vdoth = 2) needs only the
+    # gradient of the active state: one gradient-only Q-Chem job, template from JOB_AD.
+    $grad_only      = ( $typeofinput eq "jad" || $vdoth == 2 ) ? 1 : 0;
+    $qchem_template = ( $typeofinput eq "jad" ) ? "$JAD/qchem.inp" : "$JND/qchem.inp";
 }
 
 sub run_program {
-    find_typeofinput();
-    die "$mdle The interface does not handle adiabatic dynamics (JOB_AD)\n" if $typeofinput eq "jad";
 
     my $cmd = $par{reuse_guess}
         ? "qchem -save -nt $par{nt} $qchem_inp $qchem_out $save_name > qchem.status 2>&1"
@@ -403,6 +414,16 @@ sub run_program {
     archive_output() if -e $qchem_out;
     if ( $retval != 0 ) {
         print_STDOUT( "$mdle Q-Chem returned a non-zero exit code ($retval). See TEMP/$qchem_out and qchem.status.\n", $istep, $kt );
+        # Quote Q-Chem's own reason: convergence failures and the line after "fatal error"
+        if ( open( my $fh, '<', $qchem_out ) ) {
+            my @l = <$fh>;
+            close $fh;
+            my @why = grep { /(did not|failed to) converge|NOT CONVERGED/i } @l;
+            for my $i ( 0 .. $#l - 2 ) {
+                push @why, $l[ $i + 2 ] if $l[$i] =~ /Q-Chem fatal error/ && $l[ $i + 2 ] =~ /\S/;
+            }
+            print_STDOUT( "$mdle Q-Chem reports: " . join( " | ", map { s/^\s+|\s+$//gr } @why ) . "\n", $istep, $kt ) if @why;
+        }
         die "$mdle Q-Chem failed\n";
     }
     prune_saved_scratch() if $par{reuse_guess};
@@ -632,7 +653,7 @@ sub treat_nacme {
     if ( -s "nad_vectors" ) { copy( "nad_vectors", "oldh" ) or die "$mdle Copy of nad_vectors to oldh failed: $!"; }
     else                    { write_vectors("oldh"); }
 
-    if ( $vdoth == 2 ) {
+    if ( $grad_only ) {
         # NewtonX computes time-dependent Baeck-An couplings from the energies itself.
         %computed_pair = ();
         write_vectors("nad_vectors");

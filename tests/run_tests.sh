@@ -112,8 +112,12 @@ if step $d $WORK/conv/0.0000.out.gz 0 && grep -q "WARNING: Q-Chem job 1 reports"
 else bad "stop_on_unconverged = 0 did not continue with a warning"; fi
 d=$(new_traj methane_full e_njobs); zcat $OUT0 | awk '/^Running Job 2 of 2/ {exit} {print}' | { mkdir -p $WORK/onejob; gzip > $WORK/onejob/0.0000.out.gz; }
 expect_fail "a missing Q-Chem job stops the run" "Expected 2 Q-Chem job(s)" $d $WORK/onejob/0.0000.out.gz
-d=$(new_traj methane_full e_ad); mkdir -p $d/JOB_AD; echo 1 > $d/type_of_dyn.out
-expect_fail "type_of_dyn.out = 1 with JOB_AD selects adiabatic input" "does not handle adiabatic" $d
+# Adiabatic step (mixed dynamics with THRES): JOB_AD template, one gradient-only job
+d=$(new_traj methane_force adiab); mkdir -p $d/JOB_AD; sed -e '/CALC_NAC/d' -e 's/^METHOD .*/&\n! from JOB_AD/' $d/JOB_NAD/qchem.inp > $d/JOB_AD/qchem.inp; echo 1 > $d/type_of_dyn.out
+if step $d $HERE/data/methane_force/outputs/0.0000.out.gz 0; then
+  grep -q '! from JOB_AD' $d/qchem.inp && grep -q 'JOBTYPE *FORCE' $d/qchem.inp && ! grep -q '^@@@' $d/qchem.inp && [ -s $d/grad ] \
+    && ok "type_of_dyn.out = 1: one gradient-only job built from JOB_AD/qchem.inp" || bad "adiabatic step: wrong input"
+else bad "adiabatic step stopped: $(tail -1 $d/../snap/0.0000.log)"; fi
 
 d=$(new_traj methane_full e_vdoth1); printf ' &shinp\n vdoth = 1\n/\n' > $d/sh.inp
 expect_fail "vdoth = 1 (overlaps) is refused" "vdoth = 1 is not supported" $d
@@ -158,12 +162,26 @@ if step $d $OUT0 0; then
 else bad "second-run test: first step failed"; fi
 
 # 7. vdoth = 2 (time-dependent Baeck-An): one gradient-only job, no couplings
-d=$(new_traj methane_force tdba); printf ' &shinp\n vdoth = 2\n/\n' > $d/sh.inp
+d=$(new_traj methane_force tdba); printf ' &shinp\n vdoth = 2\n/\n' > $d/sh.inp; mkdir -p $d/JOB_AD; sed '/CALC_NAC/d' $d/JOB_NAD/qchem.inp > $d/JOB_AD/qchem.inp
 if step $d $HERE/data/methane_force/outputs/0.0000.out.gz 0; then
   g=$(head -1 $d/grad | awk '{printf "%.8f %.8f %.8f", $1, $2, $3}'); n=$(nadv_norms $d/nad_vectors 5)
   grep -q 'JOBTYPE *FORCE' $d/qchem.inp && ! grep -q CALC_NAC $d/qchem.inp && [ "$g" = "-0.06288588 0.00003134 -0.00001470" ] && [ "$n" = "0.000 0.000 0.000" ] \
     && ok "vdoth = 2: gradient-only input, Full Analytical Gradient read, couplings left to NewtonX" || bad "vdoth = 2: grad '$g' couplings '$n'"
 else bad "vdoth = 2 step stopped: $(tail -1 $d/../snap/0.0000.log)"; fi
+
+# 8. NewtonX wants no couplings (THRES): gradient-only job
+d=$(new_traj methane_force nx_none); printf 'CI\n' > $d/transmomin
+if step $d $HERE/data/methane_force/outputs/0.0000.out.gz 0; then
+  grep -q 'JOBTYPE *FORCE' $d/qchem.inp && ! grep -q CALC_NAC $d/qchem.inp && grep -q "no couplings wanted, gradient only" $d/../snap/0.0000.log \
+    && ok "nx: empty pair list from NewtonX -> one gradient-only job" || bad "nx: empty pair list did not give a gradient-only job"
+else bad "nx empty pair list stopped: $(tail -1 $d/../snap/0.0000.log)"; fi
+
+# 9. Q-Chem exits with an error: its reason is quoted
+d=$(new_traj methane_full e_rc); mkdir -p $WORK/crash
+zcat $OUT0 | awk '/CCSD T converged/ {print " CCSD iterations did not converge."; print " Q-Chem fatal error occurred in module x.C, line 26:"; print ""; print " Key '"'"'f2_oo_float'"'"' is not known."; exit} {print}' | gzip > $WORK/crash/0.0000.out.gz
+if REPLAY_RC=1 step $d $WORK/crash/0.0000.out.gz 0; then bad "failing Q-Chem run did not stop the step"
+elif grep -q "Q-Chem reports: CCSD iterations did not converge. | Key 'f2_oo_float' is not known." $d/../snap/0.0000.log; then ok "failing Q-Chem run stops with Q-Chem's own reason quoted"
+else bad "failing Q-Chem run: reason not quoted ($(grep 'Q-Chem reports' $d/../snap/0.0000.log))"; fi
 
 echo "$pass passed, $fail failed"
 [ $fail -eq 0 ]

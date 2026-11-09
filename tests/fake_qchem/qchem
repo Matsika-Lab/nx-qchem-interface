@@ -2,3 +2,4 @@
 # fake qchem for replay tests: writes the archived output given in $REPLAY_OUT to qchem.out
 # (accepts both "qchem -nt N inp out" and "qchem -save -nt N inp out savename")
 case "$REPLAY_OUT" in *.gz) zcat "$REPLAY_OUT" > qchem.out ;; *) cp "$REPLAY_OUT" qchem.out ;; esac
+exit ${REPLAY_RC:-0}
