@@ -1,0 +1,31 @@
+# qchem.par — settings for run-qchem-eom.pl
+#
+# Copy this file to your trajectory folder as "qchem.par" and change what you need.
+# Every line is "keyword = value"; anything after # is a comment.
+# Keywords you leave out keep the default shown here. Unknown keywords stop the run.
+
+# Threads for each Q-Chem run (qchem -nt).
+nt = 4
+
+# Which nonadiabatic couplings are computed at each step:
+#   full    every pair of states, using n-1 Q-Chem jobs per step (n = number of states)
+#   carry   only pairs with the active state; other pairs keep their last computed value
+#   active  only pairs with the active state; other pairs are zero
+nac_mode = full
+
+# Start each SCF from the previous step's orbitals (1 = yes, 0 = no).
+reuse_guess = 1
+
+# Keep each step's Q-Chem output in INFO_RESTART/qchem_outputs/<time>.out(.gz).
+archive = 1
+archive_interval = 1
+archive_gzip = 1
+
+# Print energies, the active-state gradient and the couplings in RESULTS/nx.log.
+print_extracted = 1
+
+# Warn when a coupling is aligned to a stored vector it barely overlaps (|cos| below this).
+phase_warn = 0.3
+
+# Stop the trajectory if Q-Chem reports a convergence failure (1 = stop, 0 = warn and continue).
+stop_on_unconverged = 1
