@@ -15,8 +15,8 @@
 # Temple University, USA.
 # 2025-2026.
 #
-# The 2026 revision was developed with Claude Code (Anthropic) using the Claude
-# Opus 5.5 model; see the AI assistance note in README.md.
+# The 2026 revision was refactored and improved with Claude Code (Anthropic) using
+# the Claude Opus 5.5 model; see the AI assistance note in README.md.
 #
 #====================================================================================
 #
