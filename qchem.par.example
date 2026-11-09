@@ -8,10 +8,12 @@
 nt = 4
 
 # Which nonadiabatic couplings are computed at each step:
+#   nx      the pairs NewtonX asks for (jiri.inp and THRES; all pairs by default)
 #   full    every pair of states, using n-1 Q-Chem jobs per step (n = number of states)
 #   carry   only pairs with the active state; other pairs keep their last computed value
 #   active  only pairs with the active state; other pairs are zero
-nac_mode = full
+# full, carry and active override NewtonX's selection. Ignored when vdoth = 2 in sh.inp.
+nac_mode = nx
 
 # Start each SCF from the previous step's orbitals (1 = yes, 0 = no).
 reuse_guess = 1
