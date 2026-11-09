@@ -3,5 +3,6 @@
 # output file named on the command line (the argument ending in .out), else qchem.out.
 out=qchem.out
 for a in "$@"; do case "$a" in *.out) out="$a" ;; esac; done
-case "$REPLAY_OUT" in *.gz) zcat "$REPLAY_OUT" > "$out" ;; *) cp "$REPLAY_OUT" "$out" ;; esac
+if [ "$out" = scfcheck.out ] && [ -n "${REPLAY_SCFCHECK:-}" ]; then src=$REPLAY_SCFCHECK; else src=$REPLAY_OUT; fi
+case "$src" in *.gz) zcat "$src" > "$out" ;; *) cp "$src" "$out" ;; esac
 exit ${REPLAY_RC:-0}

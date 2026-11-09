@@ -31,3 +31,8 @@ phase_warn = 0.3
 
 # Stop the trajectory if Q-Chem reports a convergence failure (1 = stop, 0 = warn and continue).
 stop_on_unconverged = 1
+
+# Compare the SCF solution followed from step to step (reuse_guess = 1) with one SCF from a
+# fresh guess, and warn when the fresh one is lower: the trajectory may be on an excited SCF
+# solution. Costs one extra SCF per step. auto = on for open-shell (multiplicity > 1) references.
+scf_check = auto

@@ -208,6 +208,15 @@ ic_case ea 4 "0.93334917 0.96000275 0.8569568" "-9.4103"
 d=$WORK/ic_ee; printf ' &dat\n nis = 2\n nfs = 4\n/\n' > $d/initqp_input
 ( cd $d && REPLAY_OUT=$HERE/data/initcond_ee/qchem_ic.out.gz perl "$IC" > log2 2>&1 ) && bad "initcond: nis = 2 accepted" || { grep -q "only transitions from state 1" $d/log2 && ok "initcond: nis > 1 is refused with a clear message" || bad "initcond: nis = 2 wrong message"; }
 
+# 9c. Open-shell reference on an excited SCF solution (ethylene EOM-SF at 7.0 fs): scf_check warns
+d=$(new_traj ethylene_sf_scfcheck sfcheck); mkdir -p $QCSCRATCH/nxqc_$(printf '%s' "$d" | md5sum | cut -c1-12); touch $QCSCRATCH/nxqc_$(printf '%s' "$d" | md5sum | cut -c1-12)/53.0
+if REPLAY_SCFCHECK=$HERE/data/ethylene_sf_scfcheck/fresh_scf_7.0000.out.gz step $d $HERE/data/ethylene_sf_scfcheck/outputs/7.0000.out.gz 14; then
+  grep -q "followed from the previous step is 0.657 eV above a fresh-guess SCF" $d/../snap/7.0000.log && [ -s $d/../INFO_RESTART/scf_check.dat ] \
+    && ok "scf_check: excited UHF solution detected (0.657 eV above a fresh-guess SCF)" || bad "scf_check: no warning ($(grep -c WARNING $d/../snap/7.0000.log) warnings)"
+else bad "scf_check step stopped: $(tail -1 $d/../snap/7.0000.log)"; fi
+d=$(new_traj methane_full e_scfchk "scf_check = sometimes")
+expect_fail "invalid scf_check is refused" "scf_check must be auto, 0 or 1" $d
+
 # 10. Documentation templates are the example inputs (one source of truth)
 for pair in ip:methane_cation_eomip_full ea:methyl_radical_eomea ee:methaniminium_eomee sf:ethylene_eomsf; do
   t=${pair%%:*}; ex=${pair#*:}

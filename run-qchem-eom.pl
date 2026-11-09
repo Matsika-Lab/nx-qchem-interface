@@ -54,6 +54,7 @@ my %par = (
     print_extracted     => 1,       # print energies, gradient and couplings to the NX log
     phase_warn          => 0.3,     # warn if |cos| against a stored phase reference is below this
     stop_on_unconverged => 1,       # stop the trajectory if Q-Chem reports a convergence failure
+    scf_check           => "auto",  # compare the followed SCF with a fresh-guess SCF (auto: open-shell references)
 );
 my %allowed_nac_mode = ( nx => 1, full => 1, carry => 1, active => 1 );
 # ===================================================================================
@@ -78,6 +79,7 @@ find_typeofinput();
 prepare_input();
 run_program();
 split_jobs();
+check_scf_solution();
 read_energy();
 read_gradients();
 treat_nacme();
@@ -148,6 +150,7 @@ sub read_parameters {
     }
     die "$mdle nac_mode must be nx, full, carry or active (got '$par{nac_mode}')\n"
         unless $allowed_nac_mode{ $par{nac_mode} };
+    die "$mdle scf_check must be auto, 0 or 1 (got '$par{scf_check}')\n" unless $par{scf_check} =~ /^(auto|0|1)$/;
     for my $k (qw(nt archive_interval)) {
         die "$mdle $k must be a positive integer\n" unless $par{$k} =~ /^\d+$/ && $par{$k} > 0;
     }
@@ -462,6 +465,63 @@ sub archive_output {
     }
     else {
         copy( $qchem_out, "$dir/$name" ) or die "$mdle Cannot copy $qchem_out to $dir: $!";
+    }
+}
+
+sub check_scf_solution {
+    #
+    # With orbital reuse the SCF follows its solution from step to step. For open-shell
+    # (UHF) references two stable SCF solutions can cross, and the followed one can end
+    # up above the lowest; stability analysis does not detect this. Run one extra SCF from
+    # a fresh guess (no saved orbitals) and warn when it finds a lower solution.
+    # Results go to INFO_RESTART/scf_check.dat: time, followed, fresh (hartree), difference (eV).
+    #
+    return unless $par{reuse_guess};
+    open( my $tf, '<', $qchem_template ) or return;
+    my @tpl = <$tf>;
+    close $tf;
+    my ($mult) = map { /^\s*-?\d+\s+(\d+)\s*$/ ? $1 : () } @tpl;
+    my $on = ( $par{scf_check} eq "auto" ) ? ( defined $mult && $mult > 1 ) : $par{scf_check};
+    return unless $on;
+
+    my ($followed) = map { /Total energy in the final basis set\s*=\s*(-?\d+\.\d+)/ ? $1 : () } @{ $job_text[0] };
+    return unless defined $followed;
+
+    # Fresh-guess SCF input: the job-1 input with the correlated method and properties removed
+    open( my $qi, '<', $qchem_inp ) or return;
+    my $inp = join( "", <$qi> );
+    close $qi;
+    ($inp) = split( /\n\@\@\@\n/, $inp );
+    my @out;
+    my $in_rem = 0;
+    for my $l ( split( /^/, $inp ) ) {
+        if ( $l =~ /^\s*\$rem/i ) { $in_rem = 1; push @out, $l, "METHOD            HF\n"; push @out, "UNRESTRICTED      TRUE\n" if defined $mult && $mult > 1; next; }
+        if ( $in_rem && $l =~ /^\s*\$end/i ) { $in_rem = 0; push @out, $l; next; }
+        next if $in_rem && $l =~ /^\s*(METHOD|EXCHANGE|CORRELATION|UNRESTRICTED|JOBTYPE|SCF_GUESS|CALC_NAC|CC_\w+|EOM_\w+|(IP|EA|EE|SF|DIP|DEA|DSF)_STATES|IP_\w+|EA_\w+)\b/i;
+        push @out, $l;
+    }
+    open( my $fo, '>', "scfcheck.inp" ) or return;
+    print $fo @out;
+    close $fo;
+    my $rc = callprog( "", "qchem -nt $par{nt} scfcheck.inp scfcheck.out > scfcheck.status 2>&1", $mdle );
+    return if $rc != 0;
+    open( my $fc, '<', "scfcheck.out" ) or return;
+    my ($fresh) = map { /Total energy in the final basis set\s*=\s*(-?\d+\.\d+)/ ? $1 : () } <$fc>;
+    close $fc;
+    return unless defined $fresh;
+
+    my $au2ev = units("au2ev");
+    my $diff  = ( $followed - $fresh ) * $au2ev;
+    my $dir   = "../INFO_RESTART";
+    make_path($dir) unless -d $dir;
+    if ( open( my $fl, '>>', "$dir/scf_check.dat" ) ) {
+        printf $fl "%10.4f %18.10f %18.10f %10.4f\n", $t, $followed, $fresh, $diff;
+        close $fl;
+    }
+    if ( $followed - $fresh > 1e-4 ) {
+        print_STDOUT( sprintf( "$mdle WARNING: the SCF reference followed from the previous step is %.3f eV above a fresh-guess SCF "
+              . "solution (%.8f vs %.8f hartree). The trajectory may be on an excited SCF solution; see docs/troubleshooting.md.\n",
+              $diff, $followed, $fresh ), $istep, $kt );
     }
 }
 

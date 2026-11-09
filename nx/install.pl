@@ -105,7 +105,7 @@ $block{check_thirdparty} = <<'EOF';
          }
          if ($qcfound == 0){exit_error("Cannot find a Q-Chem template ($JND/qchem.inp or $JAD/qchem.inp).",$mdle);}
          # Settings (qchem.par, keyword = value)
-         my @qckeys = qw(nt nac_mode reuse_guess archive archive_interval archive_gzip print_extracted phase_warn stop_on_unconverged);
+         my @qckeys = qw(nt nac_mode reuse_guess archive archive_interval archive_gzip print_extracted phase_warn stop_on_unconverged scf_check);
          my %qcpar;
          @qcpar{@qckeys} = load_defaults_tpp($prog,"","");
          if (-s $progpar){
@@ -138,9 +138,9 @@ $block{load_defaults_tpp} = <<'EOF';
     ## Q-CHEM ##
     #--------------------------------------------------------------------------
     # nt, nac_mode, reuse_guess, archive, archive_interval, archive_gzip,
-    # print_extracted, phase_warn, stop_on_unconverged
+    # print_extracted, phase_warn, stop_on_unconverged, scf_check
     if ($progname eq "qchem"){
-       return 4, "nx", 1, 1, 1, 1, 1, 0.3, 1;
+       return 4, "nx", 1, 1, 1, 1, 1, 0.3, 1, "auto";
     }
 EOF
 
