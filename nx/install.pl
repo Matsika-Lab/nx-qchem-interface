@@ -85,6 +85,7 @@ $block{check_thirdparty} = <<'EOF';
          my $qcvd = getkeyword("sh.inp","vdoth",0);
          if (($qcvd != 0) and ($qcvd != 2)){exit_error("vdoth = $qcvd is not available with Q-Chem EOM-CC. Use 0 (coupling vectors) or 2 (time-dependent Baeck-An).",$mdle);}
          if (($qcvd == 0) and ($qctxt !~ /^\s*CALC_NAC\b/mi)){exit_error("$qctpl must contain CALC_NAC 2 for vdoth = 0.",$mdle);}
+         if (($qcvd == 0) and ($qctxt =~ /^\s*SF_STATES\b/mi)){print_STDOUT("\tWARNING: EOM-SF coupling vectors are not documented in the Q-Chem manual (EOM-CC couplings are listed for EE, IP and EA). Check them before production use, or use vdoth = 2.\n");}
          # Settings (qchem.par, keyword = value)
          my @qckeys = qw(nt nac_mode reuse_guess archive archive_interval archive_gzip print_extracted phase_warn stop_on_unconverged);
          my %qcpar;

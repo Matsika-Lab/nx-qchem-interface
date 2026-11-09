@@ -309,6 +309,13 @@ sub prepare_input {
     die "$mdle $qchem_template must contain 'CALC_NAC 2' for coupling vectors (vdoth = 0 in sh.inp)\n"
         if $vdoth == 0 && !$has_nac;
 
+    # The Q-Chem manuals (5.4 to 6.2) list EOM-CC couplings for EE, IP and EA only.
+    if ( $vdoth == 0 && $istep == 0 && $run_flag ne "second run" && grep { /^\s*SF_STATES\b/i } @tpl ) {
+        print_STDOUT( "$mdle WARNING: EOM-SF coupling vectors are computed by Q-Chem but are not documented "
+              . "(the Q-Chem manual lists EOM-CC couplings for EE, IP and EA). Check them before production use, "
+              . "or use vdoth = 2 (couplings from energies).\n", $istep, $kt );
+    }
+
     @job_targets = job_targets();
     my $have_guess = $par{reuse_guess} && -s saved_orbitals();
     if ( $par{print_extracted} || $lvprt >= 2 ) {
