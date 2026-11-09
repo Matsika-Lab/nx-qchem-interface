@@ -2,7 +2,7 @@
 #
 #====================================================================================
 #
-# Interface between Q-Chem and NewtonX
+# Interface between Q-Chem (EOM-CCSD) and NewtonX 2.x
 #
 # Adapted from the TPP interface template by Mario Barbatti, 2021.
 #
@@ -12,7 +12,18 @@
 #
 # Matsika Lab,
 # Temple University, USA.
-# 2025.
+# 2025-2026.
+#
+#====================================================================================
+#
+# NewtonX calls this script once per time step inside TEMP/. It
+#   1. writes the current geometry into JOB_NAD/qchem.inp,
+#   2. runs Q-Chem (one or more EOM-CCSD jobs in a single input),
+#   3. writes epot, grad, grad.all and nad_vectors for NewtonX,
+#   4. keeps the sign of every coupling vector continuous in time.
+#
+# Settings are read from qchem.par in the trajectory directory (optional).
+# See README.md for the list of keywords.
 #
 #====================================================================================
 #
@@ -20,84 +31,60 @@ use strict;
 use warnings;
 use File::Copy;
 use File::Path qw(make_path);
+use Digest::MD5 qw(md5_hex);
+use IO::Compress::Gzip qw(gzip $GzipError);
 use lib join( '/', $ENV{"NX"}, "lib" );
 use colib_perl;
 
 # ===================================================================================
-# SCRIPT PARAMETERS
+# DEFAULT SETTINGS (override any of them in qchem.par as "keyword = value")
 # ===================================================================================
-my $archive_outputs  = 1; # Set to 1 to enable archiving Q-Chem outputs, 0 to disable
-my $archive_interval = 1; # Archive every n timesteps (e.g., 1 = every step, 5 = every 5th step)
-my $nt               = 4; # Number of threads for Q-Chem
-my $print_extracted  = 1; # Set to 1 to print extracted data to STDOUT, 0 to suppress
-# Persistent per-pair phase reference. Q-Chem EOM-CC only computes NACs between the
-# CC_STATE_TO_OPT state and the others, so after a hop some pairs have no coupling at
-# t-dt and escalar cannot fix their sign. The last known phase-corrected vector of each
-# pair is kept here and used as the reference in that case.
-my $phase_ref_file   = "../INFO_RESTART/nac_phase_ref";
-my $phase_ref_warn   = 0.3; # Warn if |cos| against a stale reference is below this
+my %par = (
+    nt                  => 4,       # threads for Q-Chem (qchem -nt)
+    nac_mode            => "full",  # full | carry | active (see README)
+    reuse_guess         => 1,       # start each SCF from the previous step's orbitals
+    archive             => 1,       # keep each step's Q-Chem output in INFO_RESTART/qchem_outputs
+    archive_interval    => 1,       # archive every n-th step
+    archive_gzip        => 1,       # gzip archived outputs
+    print_extracted     => 1,       # print energies, gradient and couplings to the NX log
+    phase_warn          => 0.3,     # warn if |cos| against a stored phase reference is below this
+    stop_on_unconverged => 1,       # stop the trajectory if Q-Chem reports a convergence failure
+);
+my %allowed_nac_mode = ( full => 1, carry => 1, active => 1 );
 # ===================================================================================
 
-# We are using "strict." Thus, all variables must be declared.
 my ( $mld, $mdle, $BASEDIR, $DEBUG, $JAD, $JND, $ctd, $fpar );
-my ( $qchem_template, $qchem_inp, $qchem_out );
+my ( $qchem_template, $qchem_inp, $qchem_out, $phase_ref_file, $save_name );
 my ( $nat, $istep, $nstat, $nstatdyn, $ndamp, $kt, $dt, $t, $tmax, $nintc );
 my ( $nxrestart, $thres, $killstat, $timekill, $prog, $lvprt, $etot_jump, $etot_drift );
-my ( @symb, @zn, @x, @y, @z, @Mass, $ia );
+my ( @symb, @zn, @x, @y, @z, @Mass );
 my ( $typeofinput, $type );
-my ( @epot, $ns );
-my ( $vdoth, $run_flag );
-my ( $ncoup, $nc );
-my ( @gx, @gy, @gz, @hx, @hy, @hz );
-my ( $mem, $retval );
-my (%progconf);
+my ( @epot, $mem, $retval, %progconf );
+my ( $ncoup, @gx, @gy, @gz, @hx, @hy, @hz );
+my ( @job_targets, @job_text, %computed_pair );
 
-# Define basic variables
 define_variables();
-
-# Write debug messages
+read_parameters();
 write_debug1();
-
-# Read current geometry
 read_geom();
-
-# Prepare Q-Chem input
 prepare_input();
-
-# Run Q-Chem
 run_program();
-
-# Read and write energies
+split_jobs();
 read_energy();
-
-# Read and write gradients
 read_gradients();
-
-# Nonadiabatic couplings
 treat_nacme();
 
-#
 #====================================================================================
-#
-#                                START SUBROUTINES
-#
+#                                  SUBROUTINES
 #====================================================================================
-#
 
 sub define_variables {
-    #
-    #====================================================================================
-    #
-    # Define basic variables to be used everywhere.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    $mld             = $ENV{"NX"};
-    $mdle            = "run-qchem-eom.pl:";
-    $qchem_template  = "JOB_NAD/qchem.inp";
-    $qchem_inp       = "qchem.inp";
-    $qchem_out       = "qchem.out";
+    $mld            = $ENV{"NX"};
+    $mdle           = "run-qchem-eom.pl:";
+    $qchem_template = "JOB_NAD/qchem.inp";
+    $qchem_inp      = "qchem.inp";
+    $qchem_out      = "qchem.out";
+    $phase_ref_file = "../INFO_RESTART/nac_phase_ref";
 
     $BASEDIR = `pwd`;
     chomp($BASEDIR);
@@ -107,672 +94,481 @@ sub define_variables {
     $JND   = "JOB_NAD";
     $ctd   = "control.d";
 
-    # Load current dynamics status (read control.d)
-    ( $nat, $istep, $nstat, $nstatdyn, $ndamp, $kt, $dt, $t, $tmax, $nintc, $mem, $nxrestart, $thres, $killstat, $timekill, $prog, $lvprt, $etot_jump, $etot_drift ) = load_status( $ctd, $mdle );
+    ( $nat, $istep, $nstat, $nstatdyn, $ndamp, $kt, $dt, $t, $tmax, $nintc, $mem, $nxrestart,
+      $thres, $killstat, $timekill, $prog, $lvprt, $etot_jump, $etot_drift ) = load_status( $ctd, $mdle );
 
     %progconf = prog_config($prog);
-    $fpar     = $progconf{parfile};
+    $fpar     = $progconf{parfile} || "qchem.par";
+    $ncoup    = $nstat * ( $nstat - 1 ) / 2;
+
+    # Q-Chem scratch folder kept between steps (orbitals only), unique per trajectory
+    $save_name = "nxqc_" . substr( md5_hex($BASEDIR), 0, 12 );
+}
+
+sub read_parameters {
+    #
+    # Read "keyword = value" lines from qchem.par (NewtonX copies it into TEMP/).
+    # A copy in JOB_NAD/ is also accepted. '#' starts a comment.
+    #
+    my $file;
+    for my $f ( $fpar, "$JND/$fpar" ) {
+        if ( -s $f ) { $file = $f; last; }
+    }
+    if ( defined $file ) {
+        open( my $fh, '<', $file ) or die "$mdle Cannot open $file: $!";
+        while ( my $l = <$fh> ) {
+            $l =~ s/#.*//;
+            next unless $l =~ /\S/;
+            my ( $k, $v ) = $l =~ /^\s*(\w+)\s*=\s*(\S+)\s*$/
+                or die "$mdle Cannot read line in $file: $l";
+            $k = lc $k;
+            die "$mdle Unknown keyword '$k' in $file\n" unless exists $par{$k};
+            $par{$k} = lc $v;
+        }
+        close($fh);
+    }
+    die "$mdle nac_mode must be full, carry or active (got '$par{nac_mode}')\n"
+        unless $allowed_nac_mode{ $par{nac_mode} };
+    for my $k (qw(nt archive_interval)) {
+        die "$mdle $k must be a positive integer\n" unless $par{$k} =~ /^\d+$/ && $par{$k} > 0;
+    }
+    if ( $lvprt >= 2 ) {
+        my $s = join( ", ", map {"$_=$par{$_}"} sort keys %par );
+        print_STDOUT( "$mdle settings: $s\n", $istep, $kt );
+    }
 }
 
 sub write_debug1 {
-    #
-    #====================================================================================
-    #
-    # Write debug messages.
-    #
-    #------------------------------------------------------------------------------------
-    #
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle has taken over\n",      $istep, $kt ); }
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle running in $BASEDIR\n", $istep, $kt ); }
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle beginning here\n",      $istep, $kt ); }
     if ( $lvprt >= 3 ) {
-        print_STDOUT( "$mdle Dynamics control: \n",                                       $istep, $kt );
-        print_STDOUT( "$nat $istep $nstat $nstatdyn $ndamp $kt $dt $t $tmax \n",          $istep, $kt );
+        print_STDOUT( "$mdle running in $BASEDIR\n", $istep, $kt );
+        print_STDOUT( "$nat $istep $nstat $nstatdyn $ndamp $kt $dt $t $tmax \n", $istep, $kt );
         print_STDOUT( "$nintc $mem $nxrestart $thres $killstat $timekill $prog $lvprt\n", $istep, $kt );
-        print_STDOUT( "$etot_jump $etot_drift\n\n",                                       $istep, $kt );
+        print_STDOUT( "$etot_jump $etot_drift\n\n", $istep, $kt );
     }
 }
 
 sub read_geom {
     #
-    #====================================================================================
-    # This subroutine reads the current geometry and populates the
-    # following vectors:
-    # @symb      - atomic symbol
-    # @zn        - atomic number
-    # @x, @y, @z - cartesian coordinates (au)
-    # @Mass      - atomic mass (amu)
-    # The vector index runs from $ia = 0 to $ia = $nat-1.
-    #------------------------------------------------------------------------------------
+    # Current geometry from NewtonX: symbol, Z, x, y, z (bohr), mass.
     #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Reading current geometry.\n", $istep, $kt ); }
-
-    open( GM, "geom" ) or die "$mdle Cannot open geom";
-    $ia = 0;
-    while (<GM>) {
-        chomp;
-        $_ =~ s/^\s*//;
-        $_ =~ s/\s*$//;
-        ( $symb[$ia], $zn[$ia], $x[$ia], $y[$ia], $z[$ia], $Mass[$ia] ) = split( /\s+/, $_ );
+    open( my $fh, '<', "geom" ) or die "$mdle Cannot open geom";
+    my $ia = 0;
+    while ( my $l = <$fh> ) {
+        next unless $l =~ /\S/;
+        $l =~ s/^\s+//;
+        ( $symb[$ia], $zn[$ia], $x[$ia], $y[$ia], $z[$ia], $Mass[$ia] ) = split( /\s+/, $l );
         $ia++;
     }
-    close(GM);
+    close($fh);
+    die "$mdle geom has $ia atoms, control.d says $nat\n" unless $ia == $nat;
+}
+
+sub job_targets {
+    #
+    # States whose CC_STATE_TO_OPT job is run this step. Each job gives the couplings
+    # between its target state and every other state. The first job always targets the
+    # active state (its gradient drives the dynamics). In "full" mode, jobs are added
+    # for all other states but one, which covers every pair with nstat-1 jobs.
+    #
+    my @targets = ($nstatdyn);
+    if ( $par{nac_mode} eq "full" ) {
+        my @others = grep { $_ != $nstatdyn } 1 .. $nstat;
+        pop @others;
+        push @targets, @others;
+    }
+    return @targets;
 }
 
 sub prepare_input {
     #
-    #====================================================================================
-    # This subroutine prepares the Q-Chem input by modifying a template.
-    # It updates the geometry and the state for which properties are calculated.
-    #------------------------------------------------------------------------------------
+    # Build qchem.inp from the template: new geometry, one job per target state.
     #
+    die "$mdle Q-Chem template '$qchem_template' not found\n" unless -e $qchem_template;
+    open( my $fh, '<', $qchem_template ) or die "$mdle Cannot open $qchem_template: $!";
+    my @tpl = <$fh>;
+    close $fh;
 
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Preparing input for Q-Chem.\n", $istep, $kt ); }
+    # The template must ignore symmetry: CC_STATE_TO_OPT [1,n] assumes a single irrep.
+    my $sym_ok = grep { /^\s*SYM_IGNORE\s*=?\s*(TRUE|1)\b/i } @tpl;
+    die "$mdle $qchem_template must contain 'SYM_IGNORE TRUE' (states are addressed as [1,n])\n"
+        unless $sym_ok;
+    my $has_rem = grep { /^\s*\$rem/i } @tpl;
+    die "$mdle $qchem_template has no \$rem section\n" unless $has_rem;
 
-    # Check if a template file exists
-    die "$mdle Q-Chem template file '$qchem_template' not found!" unless -e $qchem_template;
-
-    open( my $fh_tpl, '<', $qchem_template ) or die "Could not open '$qchem_template': $!";
-    my @template_lines = <$fh_tpl>;
-    close $fh_tpl;
-
-    open( my $fh_inp, '>', $qchem_inp ) or die "Could not create '$qchem_inp': $!";
+    my $charge_mult;
+    for my $i ( 0 .. $#tpl ) {
+        if ( $tpl[$i] =~ /^\s*\$molecule/i ) { $charge_mult = $tpl[ $i + 1 ]; last; }
+    }
+    die "$mdle No charge/multiplicity line after \$molecule in $qchem_template\n"
+        unless defined $charge_mult && $charge_mult =~ /^\s*-?\d+\s+\d+\s*$/;
 
     my $au2ang = units("au2ang");
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Unit conversion factor (au2ang): $au2ang\n", $istep, $kt ); }
-    my $in_molecule_section = 0; # Flag to know if we are inside the molecule block
-
-    # Find the charge and multiplicity line from the template first
-    my $charge_mult_line = "";
-    for (my $i = 0; $i < @template_lines; $i++) {
-        if ($template_lines[$i] =~ /\$molecule/i) {
-            $charge_mult_line = $template_lines[$i+1]; # The next line should be charge/mult
-            last;
-        }
+    my $geom_block = $charge_mult;
+    for my $i ( 0 .. $nat - 1 ) {
+        $geom_block .= sprintf( "%-4s %18.10f %18.10f %18.10f\n",
+            $symb[$i], $x[$i] * $au2ang, $y[$i] * $au2ang, $z[$i] * $au2ang );
     }
-    die "Could not find charge/multiplicity line in template" unless ($charge_mult_line ne "");
 
+    @job_targets = job_targets();
+    my $have_guess = $par{reuse_guess} && -s saved_orbitals();
 
-    foreach my $line (@template_lines) {
-        if ( $line =~ /\$molecule/i ) {
-            $in_molecule_section = 1;
-            print $fh_inp $line; # Print the $molecule line
-            print $fh_inp $charge_mult_line; # Print the charge/multiplicity line
-
-            # Write the new geometry
-            for my $i ( 0 .. $#symb ) {
-                my $x_ang = $x[$i] * $au2ang;
-                my $y_ang = $y[$i] * $au2ang;
-                my $z_ang = $z[$i] * $au2ang;
-                printf $fh_inp "%-4s %15.8f %15.8f %15.8f\n", $symb[$i], $x_ang, $y_ang, $z_ang;
+    my @jobs;
+    for my $j ( 0 .. $#job_targets ) {
+        my $target  = $job_targets[$j];
+        my $read_mo = ( $j > 0 ) || $have_guess;
+        my $out     = "";
+        my $in_mol  = 0;
+        my $in_rem  = 0;
+        for my $line (@tpl) {
+            if ( $line =~ /^\s*\$molecule/i ) {
+                $in_mol = 1;
+                $out .= $line;
+                $out .= ( $j == 0 ) ? $geom_block : "read\n";
+                next;
             }
-            next; # Move to the next line in the template
+            if ($in_mol) {
+                if ( $line =~ /^\s*\$end/i ) { $in_mol = 0; $out .= $line; }
+                next;
+            }
+            if ( $line =~ /^\s*\$rem/i ) { $in_rem = 1; $out .= $line; next; }
+            if ( $in_rem && $line =~ /^\s*\$end/i ) {
+                $out .= "CC_STATE_TO_OPT   [1,$target]\n";
+                $out .= "SCF_GUESS         READ\n" if $read_mo;
+                $out .= $line;
+                $in_rem = 0;
+                next;
+            }
+            next if $in_rem && $line =~ /^\s*(CC_STATE_TO_OPT|SCF_GUESS)\b/i;
+            $out .= $line;
         }
-
-        if ( $line =~ /\$end/i && $in_molecule_section ) {
-            $in_molecule_section = 0;
-            print $fh_inp $line; # Print the $end line
-            next;
-        }
-
-        if ($in_molecule_section) {
-            # This will skip the old charge/mult line and the old geometry lines
-            next;
-        }
-
-        # Handle other lines outside the molecule block
-        if ( $line =~ /CC_STATE_TO_OPT/i ) {
-            print $fh_inp "CC_STATE_TO_OPT   [1,$nstatdyn]\n";
-        }
-        else {
-            print $fh_inp $line;
-        }
+        push @jobs, $out;
     }
 
-    close $fh_inp;
+    open( my $fo, '>', $qchem_inp ) or die "$mdle Cannot create $qchem_inp: $!";
+    print $fo join( "\n\@\@\@\n\n", @jobs );
+    close $fo;
+}
+
+sub saved_orbitals {
+    my $scr = $ENV{QCSCRATCH} || "";
+    return "" unless $scr;
+    return "$scr/$save_name/53.0";
 }
 
 sub find_typeofinput {
     #
-    #====================================================================================
+    # Adiabatic (JOB_AD) or nonadiabatic (JOB_NAD) input.
     #
-    # Check type of dynamics.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Checking type of dynamics.\n", $istep, $kt ); }
-
-    # Read $type from type_of_dyn.out
     my $typeout = "type_of_dyn.out";
     $type = 2;
     if ( -s $typeout ) {
-        open( INP, $typeout ) or die "$mdle Cannot open $typeout";
-        $_ = <INP>;
-        chomp;
-        $_ =~ s/^\s*//;
-        $_ =~ s/\s*$//;
-        my $type = $_;
-        close(INP);
+        open( my $fh, '<', $typeout ) or die "$mdle Cannot open $typeout";
+        my $l = <$fh>;
+        close($fh);
+        ($type) = $l =~ /(\d+)/ if defined $l;
+        $type = 2 unless defined $type;
     }
-
-    # Define type of input
-    if ( ( -e $JAD ) and ( !-e $JND ) ) {
-        $typeofinput = "jad";
-    }
-    elsif ( ( !-e $JAD ) and ( -e $JND ) ) {
-        $typeofinput = "jnd";
-    }
-    elsif ( ( -e $JAD ) and ( -e $JND ) ) {
-        if ( $type == 1 ) {
-            $typeofinput = "jad";
-        }
-        elsif ( $type != 1 ) {
-            $typeofinput = "jnd";
-        }
-    }
+    if    ( -e $JAD && !-e $JND ) { $typeofinput = "jad"; }
+    elsif ( !-e $JAD && -e $JND ) { $typeofinput = "jnd"; }
+    elsif ( -e $JAD && -e $JND )  { $typeofinput = ( $type == 1 ) ? "jad" : "jnd"; }
+    else                          { die "$mdle Neither $JAD nor $JND exists\n"; }
 }
 
 sub run_program {
-    #
-    #====================================================================================
-    #
-    # This subroutine executes Q-Chem and archives the output.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Executing Q-Chem.\n", $istep, $kt ); }
-
     find_typeofinput();
+    die "$mdle The interface does not handle adiabatic dynamics (JOB_AD)\n" if $typeofinput eq "jad";
 
-    if ( $typeofinput eq "jad" ) {
-        die "The interface does not handle adiabatic dynamics: $!";
-    }
+    my $cmd = $par{reuse_guess}
+        ? "qchem -save -nt $par{nt} $qchem_inp $qchem_out $save_name > qchem.status 2>&1"
+        : "qchem -nt $par{nt} $qchem_inp $qchem_out > qchem.status 2>&1";
+    if ( $lvprt >= 2 ) { print_STDOUT( "$mdle $cmd\n", $istep, $kt ); }
+    $retval = callprog( "", $cmd, $mdle );
 
-    # Run Q-Chem
-    $retval = callprog("", "qchem -nt $nt $qchem_inp $qchem_out > qchem.status", $mdle );
-    #$retval = callprog("", "qchem $qchem_inp $qchem_out > qchem.status", $mdle );
-
+    archive_output() if -e $qchem_out;
     if ( $retval != 0 ) {
-        print_STDOUT( "Error in the Q-Chem execution!\n", $istep, $kt );
-        die;
+        print_STDOUT( "$mdle Q-Chem returned a non-zero exit code ($retval). See TEMP/$qchem_out and qchem.status.\n", $istep, $kt );
+        die "$mdle Q-Chem failed\n";
     }
+    prune_saved_scratch() if $par{reuse_guess};
+}
 
-    # Archive the output file from the current step if enabled and on the correct interval
-    if ( $archive_outputs && ( $istep % $archive_interval == 0 ) ) {
-        my $archive_dir = "../INFO_RESTART/qchem_outputs";
-        make_path($archive_dir) unless -d $archive_dir;
-        my $dest_file = "$archive_dir/$t.out";
-        copy($qchem_out, $dest_file) or die "Failed to copy $qchem_out to $dest_file: $!";
-        if ($lvprt >= 3) {
-            print_STDOUT("$mdle Archived current output to $dest_file\n", $istep, $kt);
+sub prune_saved_scratch {
+    #
+    # Keep only the MO coefficients (53.0) in the saved scratch folder.
+    #
+    my $scr = $ENV{QCSCRATCH} or return;
+    my $dir = "$scr/$save_name";
+    return unless -d $dir;
+    opendir( my $dh, $dir ) or return;
+    for my $f ( readdir $dh ) {
+        next if $f eq "." || $f eq ".." || $f eq "53.0";
+        my $p = "$dir/$f";
+        if ( -d $p ) { File::Path::remove_tree($p); } else { unlink $p; }
+    }
+    closedir $dh;
+}
+
+sub archive_output {
+    return unless $par{archive} && ( $istep % $par{archive_interval} == 0 );
+    my $dir = "../INFO_RESTART/qchem_outputs";
+    make_path($dir) unless -d $dir;
+    if ( $par{archive_gzip} ) {
+        gzip( $qchem_out => "$dir/$t.out.gz" ) or die "$mdle gzip of $qchem_out failed: $GzipError\n";
+    }
+    else {
+        copy( $qchem_out, "$dir/$t.out" ) or die "$mdle Cannot copy $qchem_out to $dir: $!";
+    }
+}
+
+sub split_jobs {
+    #
+    # Split qchem.out into its jobs and check that each one finished and converged.
+    #
+    open( my $fh, '<', $qchem_out ) or die "$mdle Cannot open $qchem_out: $!";
+    my @lines = <$fh>;
+    close $fh;
+
+    @job_text = ();
+    my $cur = -1;
+    for my $l (@lines) {
+        if ( $l =~ /^Running Job (\d+) of (\d+)/ ) { $cur = $1 - 1; $job_text[$cur] = []; next; }
+        if ( $cur < 0 ) { $cur = 0; $job_text[0] = []; }
+        push @{ $job_text[$cur] }, $l;
+    }
+    my $njobs = scalar @job_targets;
+    die "$mdle Expected $njobs Q-Chem job(s) in $qchem_out, found " . scalar(@job_text) . "\n"
+        unless @job_text == $njobs;
+
+    for my $j ( 0 .. $#job_text ) {
+        my @jl = @{ $job_text[$j] };
+        my $ok = grep {/Thank you very much for using Q-Chem/} @jl;
+        die "$mdle Q-Chem job " . ( $j + 1 ) . " (CC_STATE_TO_OPT [1,$job_targets[$j]]) did not finish normally. See TEMP/$qchem_out\n"
+            unless $ok;
+        my @bad = grep { /(did not|failed to) converge|NOT CONVERGED|not converged/i } @jl;
+        if (@bad) {
+            chomp( my $msg = $bad[0] );
+            $msg =~ s/^\s+//;
+            print_STDOUT( "$mdle WARNING: Q-Chem job " . ( $j + 1 ) . " reports: $msg\n", $istep, $kt );
+            die "$mdle Stopping on a Q-Chem convergence failure (set stop_on_unconverged = 0 in qchem.par to continue)\n"
+                if $par{stop_on_unconverged};
         }
     }
 }
 
 sub read_energy {
     #
-    #====================================================================================
+    # EOM state energies (hartree) from the first job.
     #
-    # This subroutine reads the Q-Chem output to get the potential energies.
-    # Energies must be in Hartree.
-    #
-    #------------------------------------------------------------------------------------
-    #
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Reading Epot.\n", $istep, $kt ); }
-
-    open( my $fh_out, '<', $qchem_out ) or die "Could not open '$qchem_out': $!";
-    my @lines = <$fh_out>;
-    close $fh_out;
-
-    my $line_num = 0;
-    my $state_idx = 0;
-    foreach my $line (@lines) {
-        $line_num++;
-        if ( $line =~ /(?:EOMIP|EOMEE) transition\s+\d+\/A/ ) {
-            my $energy_line = $lines[$line_num]; # The energy is on the next line
-            if ( $energy_line =~ /Total energy\s+=\s+(-?\d+\.\d+)\s+a\.u\./ ) {
-                $epot[$state_idx] = $1;
-                $state_idx++;
-            }
+    @epot = ();
+    my @jl = @{ $job_text[0] };
+    for my $i ( 0 .. $#jl - 1 ) {
+        next unless $jl[$i] =~ /^\s*EOM(?:IP|EA|EE|SF|DIP|DEA|DSF)\s+transition\s+\d+\//;
+        if ( $jl[ $i + 1 ] =~ /Total energy\s*=\s*(-?\d+\.\d+)\s+a\.u\./ ) {
+            push @epot, $1;
         }
     }
+    die "$mdle Expected at least $nstat EOM states in $qchem_out, found " . scalar(@epot) . "\n"
+        if @epot < $nstat;
+    $#epot = $nstat - 1;
 
-    if ( $state_idx != $nstat ) {
-        die "$mdle Expected $nstat states but found $state_idx energies in $qchem_out";
+    if ( -s "epot" ) { copy( "epot", "oldepot" ) or die "$mdle Copy failed: $!"; }
+    open( my $fo, '>', "epot" ) or die "$mdle Cannot write epot";
+    print $fo "$_\n" for @epot;
+    close($fo);
+    copy( "epot", "newepot" ) or die "$mdle Copy failed: $!";
+
+    if ( $par{print_extracted} ) {
+        print_STDOUT( "State energies (a.u.):\n", $istep, $kt );
+        print_STDOUT( sprintf( "  State %d: %s\n", $_ + 1, $epot[$_] ), $istep, $kt ) for 0 .. $#epot;
+        print_STDOUT( "\n", $istep, $kt );
     }
-
-    write_energy();
 }
 
-sub write_energy {
+sub read_block {
     #
-    #====================================================================================
+    # Read an nat x 3 table that starts 3 lines below index $i (header, labels, rule).
     #
-    # This subroutine writes the potential energies to epot file and prints them.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Writing Epot.\n", $istep, $kt ); }
-
-    my $file = "epot";
-    if ( -s $file ) {
-        copy( $file, "oldepot" ) or die "Copy failed: $!";
+    my ( $lines, $i ) = @_;
+    my @v;
+    for my $ia ( 0 .. $nat - 1 ) {
+        my $l = $lines->[ $i + 3 + $ia ];
+        die "$mdle Truncated table in $qchem_out\n" unless defined $l;
+        my @F = split( ' ', $l );
+        die "$mdle Unexpected table line in $qchem_out: $l" unless @F >= 4;
+        $v[$ia] = [ @F[ 1 .. 3 ] ];
     }
-    open( OUT, ">$file" ) or die "Cannot write to $file";
-    foreach (@epot) {
-        print OUT "$_\n";
-    }
-    close(OUT);
-    copy( $file, "newepot" ) or die "Copy failed: $!";
-
-    # Print energies to STDOUT if requested
-    if ($print_extracted) {
-        print_STDOUT( "State energies (a.u.):\n", $istep, $kt );
-        for (my $i=0; $i < @epot; $i++) {
-            my $state_num = $i + 1;
-            my $line_to_print = sprintf("  State %d: %s\n", $state_num, $epot[$i]);
-            print_STDOUT( $line_to_print, $istep, $kt );
-        }
-        print_STDOUT("\n", $istep, $kt);
-    }
+    return \@v;
 }
 
 sub read_gradients {
     #
-    #====================================================================================
+    # Gradients of all states from the G_I / G_J blocks (first occurrence of each state).
     #
-    # This subroutine reads the energy gradients from the Q-Chem output.
-    # It parses the "G_I, a.u." and "G_J, a.u." blocks associated with NAC calculations.
-    #
-    #------------------------------------------------------------------------------------
-    #
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Reading Gradients.\n", $istep, $kt ); }
-
-    # Initialize array with zeros
-    for ( $ns = 0; $ns <= $nstat - 1; $ns++ ) {
-        for ( $ia = 0; $ia <= $nat - 1; $ia++ ) {
-            $gx[$ns][$ia] = 0.0;
-            $gy[$ns][$ia] = 0.0;
-            $gz[$ns][$ia] = 0.0;
+    for my $ns ( 0 .. $nstat - 1 ) {
+        for my $ia ( 0 .. $nat - 1 ) { $gx[$ns][$ia] = $gy[$ns][$ia] = $gz[$ns][$ia] = 0.0; }
+    }
+    my %have;
+    for my $jl (@job_text) {
+        my ( $A, $B ) = ( -1, -1 );
+        for my $i ( 0 .. $#$jl ) {
+            my $l = $jl->[$i];
+            if ( $l =~ /State A:.*:\s+(\d+)\// ) { $A = $1; }
+            if ( $l =~ /State B:.*:\s+(\d+)\// ) { $B = $1; }
+            my $s;
+            if    ( $l =~ /^\s*G_I,\s*a\.u\./ ) { $s = $A; }
+            elsif ( $l =~ /^\s*G_J,\s*a\.u\./ ) { $s = $B; }
+            next unless defined $s;
+            die "$mdle Gradient block without a State A/B header\n" if $s < 1;
+            next if $s > $nstat || $have{$s}++;
+            my $g = read_block( $jl, $i );
+            for my $ia ( 0 .. $nat - 1 ) {
+                ( $gx[ $s - 1 ][$ia], $gy[ $s - 1 ][$ia], $gz[ $s - 1 ][$ia] ) = @{ $g->[$ia] };
+            }
         }
     }
+    die "$mdle No gradient found for the active state $nstatdyn in $qchem_out\n" unless $have{$nstatdyn};
 
-    open( my $fh_out, '<', $qchem_out ) or die "Could not open '$qchem_out': $!";
-    my @lines = <$fh_out>;
-    close $fh_out;
-
-    my $curr_state_A = -1;
-    my $curr_state_B = -1;
-    my $line_num = 0;
-    my $found_gradients = 0;
-
-    while ($line_num < @lines) {
-        my $line = $lines[$line_num];
-
-        # Capture State A and State B indices
-        # Regex matches lines like: "State A: eomip_ccsd/a: 3/A"
-        if ( $line =~ /State A:.*:\s+(\d+)\// ) {
-            $curr_state_A = $1;
-        }
-        if ( $line =~ /State B:.*:\s+(\d+)\// ) {
-            $curr_state_B = $1;
-        }
-
-        # Check for State I Gradient Block
-        if ( $line =~ /^\s*G_I,\s*a\.u\./ ) {
-            if ($curr_state_A == -1) {
-                die "$mdle Found G_I gradient block but State A is undefined!";
-            }
-            $line_num += 3; # Skip Header, Atom Label, and Separator lines
-
-            for ( $ia = 0; $ia < $nat; $ia++ ) {
-                my $dline = $lines[$line_num + $ia];
-                # Split on whitespace.
-                my @F = split( /\s+/, $dline );
-                # Format: Atom_Index X Y Z. F[0] might be empty if leading space.
-                my $idx_offset = ($F[0] eq "") ? 1 : 0;
-
-                $gx[ $curr_state_A - 1 ][$ia] = $F[$idx_offset + 1];
-                $gy[ $curr_state_A - 1 ][$ia] = $F[$idx_offset + 2];
-                $gz[ $curr_state_A - 1 ][$ia] = $F[$idx_offset + 3];
-            }
-            $found_gradients = 1;
-        }
-
-        # Check for State J Gradient Block
-        elsif ( $line =~ /^\s*G_J,\s*a\.u\./ ) {
-            if ($curr_state_B == -1) {
-                die "$mdle Found G_J gradient block but State B is undefined!";
-            }
-            $line_num += 3; # Skip Header, Atom Label, and Separator lines
-
-            for ( $ia = 0; $ia < $nat; $ia++ ) {
-                my $dline = $lines[$line_num + $ia];
-                my @F = split( /\s+/, $dline );
-                my $idx_offset = ($F[0] eq "") ? 1 : 0;
-
-                $gx[ $curr_state_B - 1 ][$ia] = $F[$idx_offset + 1];
-                $gy[ $curr_state_B - 1 ][$ia] = $F[$idx_offset + 2];
-                $gz[ $curr_state_B - 1 ][$ia] = $F[$idx_offset + 3];
-            }
-            $found_gradients = 1;
-        }
-
-        $line_num++;
-    }
-
-    # Check if we are running a single state calculation (non-NAC) where only 'Final gradient' exists
-    # If we haven't found any G_I/G_J blocks, look for a generic Final gradient for the target state.
-    if (!$found_gradients) {
-        if ( $lvprt >= 3 ) { print_STDOUT( "$mdle No G_I/G_J blocks found. Searching for 'Final gradient' (Single state assumption).\n", $istep, $kt ); }
-        $line_num = 0;
-        while ($line_num < @lines) {
-            if ( $lines[$line_num] =~ /Final gradient/ ) {
-                # In standard output, Final gradient usually refers to the optimized state.
-                # We assume this is nstatdyn.
-                $line_num += 3;
-                for ( $ia = 0; $ia < $nat; $ia++ ) {
-                    my $dline = $lines[$line_num + $ia];
-                    my @F = split( /\s+/, $dline );
-                    my $idx_offset = ($F[0] eq "") ? 1 : 0;
-                    $gx[ $nstatdyn - 1 ][$ia] = $F[$idx_offset + 1];
-                    $gy[ $nstatdyn - 1 ][$ia] = $F[$idx_offset + 2];
-                    $gz[ $nstatdyn - 1 ][$ia] = $F[$idx_offset + 3];
-                }
-                $found_gradients = 1;
-                last;
-            }
-            $line_num++;
+    open( my $f1, '>', "grad.all" ) or die "$mdle Cannot write grad.all";
+    open( my $f2, '>', "grad" )     or die "$mdle Cannot write grad";
+    for my $ns ( 0 .. $nstat - 1 ) {
+        for my $ia ( 0 .. $nat - 1 ) {
+            my $l = "$gx[$ns][$ia]  $gy[$ns][$ia]  $gz[$ns][$ia]\n";
+            print $f1 $l;
+            print $f2 $l if $ns == $nstatdyn - 1;
         }
     }
+    close($f1);
+    close($f2);
 
-    die "$mdle Could not find any gradient blocks in $qchem_out" unless $found_gradients;
-
-    write_grad();
+    if ( $par{print_extracted} ) {
+        print_STDOUT( "Gradient of state $nstatdyn (a.u.):\n", $istep, $kt );
+        for my $ia ( 0 .. $nat - 1 ) {
+            print_STDOUT( sprintf( "%-4d %15.8f %15.8f %15.8f\n", $ia + 1,
+                $gx[ $nstatdyn - 1 ][$ia], $gy[ $nstatdyn - 1 ][$ia], $gz[ $nstatdyn - 1 ][$ia] ), $istep, $kt );
+        }
+        print_STDOUT( "\n", $istep, $kt );
+    }
 }
 
-sub write_grad {
+sub pair_index {
     #
-    #====================================================================================
+    # NewtonX lower-triangular index (0-based) of the pair (i, j), i > j.
     #
-    # This subroutine writes the energy gradients to grad and grad.all files and prints them.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Writing Gradients.\n", $istep, $kt ); }
-
-    open( OUT1, ">grad.all" ) or die "Cannot write to grad.all";
-    open( OUT2, ">grad" )     or die "Cannot write to grad";
-
-    for ( $ns = 0; $ns <= $nstat - 1; $ns++ ) {
-        for ( $ia = 0; $ia <= $nat - 1; $ia++ ) {
-            print OUT1 "$gx[$ns][$ia]  $gy[$ns][$ia]  $gz[$ns][$ia]\n";
-            if ( $ns == $nstatdyn - 1 ) {
-                print OUT2 "$gx[$ns][$ia]  $gy[$ns][$ia]  $gz[$ns][$ia]\n";
-            }
-        }
-    }
-
-    close(OUT1);
-    close(OUT2);
-
-    # Print gradient of current state to STDOUT if requested
-    if ($print_extracted) {
-        print_STDOUT( "Gradient of state $nstatdyn (a.u.):\n", $istep, $kt );
-        print_STDOUT( "Atom          X               Y               Z\n", $istep, $kt );
-        print_STDOUT( "--------------------------------------------------\n", $istep, $kt );
-        for ( $ia = 0; $ia <= $nat - 1; $ia++ ) {
-            my $atom_num = $ia + 1;
-            my $line_to_print = sprintf("%-4d %15.8f %15.8f %15.8f\n", $atom_num, $gx[$nstatdyn-1][$ia], $gy[$nstatdyn-1][$ia], $gz[$nstatdyn-1][$ia]);
-            print_STDOUT($line_to_print, $istep, $kt);
-        }
-        print_STDOUT("\n", $istep, $kt);
-    }
+    my ( $i, $j ) = @_;
+    ( $i, $j ) = ( $j, $i ) if $j > $i;
+    return ( $i - 1 ) * ( $i - 2 ) / 2 + $j - 1;
 }
 
 sub treat_nacme {
-    #
-    #====================================================================================
-    #
-    # This subroutine processes the NACME.
-    #
-    #------------------------------------------------------------------------------------
-    #
+    my $run_flag = read_single_value( "which_run_is_that", "" );
+    return if $run_flag eq "second run";
 
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Treating couplings.\n", $istep, $kt ); }
-
-    $run_flag = read_single_value( "which_run_is_that", "" );
-
-    if ( $run_flag ne "second run" ) {
-        $ncoup = $nstat * ( $nstat - 1 ) / 2;
-
-        # Intialize arrays
-        for ( $nc = 0; $nc <= $ncoup - 1; $nc++ ) {
-            for ( $ia = 0; $ia <= $nat - 1; $ia++ ) {
-                $hx[$nc][$ia] = 0.0;
-                $hy[$nc][$ia] = 0.0;
-                $hz[$nc][$ia] = 0.0;
-            }
-        }
-
-        if ( -s "nad_vectors" ) {
-            copy( "nad_vectors", "oldh" ) or die "Copy of nad_vectors to oldh failed: $!";
-        }
-        elsif ( !-s "nad_vectors" ) {
-            write_nacme("oldh");
-        }
-
-        read_nacme();
-
-        # Align pairs that have no t-dt reference with their last known phase.
-        # escalar leaves such pairs untouched (nphase=+1), so this sign survives.
-        my %phase_ref = read_phase_ref();
-        align_unreferenced_pairs( \%phase_ref );
-
-        write_nacme("nad_vectors");
-        adjust_phase();
-        copy( "nad_vectors", "newh" ) or die "Copy failed: $!";
-
-        update_phase_ref( \%phase_ref );
+    for my $k ( 0 .. $ncoup - 1 ) {
+        for my $ia ( 0 .. $nat - 1 ) { $hx[$k][$ia] = $hy[$k][$ia] = $hz[$k][$ia] = 0.0; }
     }
+    if ( -s "nad_vectors" ) { copy( "nad_vectors", "oldh" ) or die "$mdle Copy of nad_vectors to oldh failed: $!"; }
+    else                    { write_vectors("oldh"); }
+
+    read_nacme();
+
+    my %ref = read_phase_ref();
+    carry_missing_pairs( \%ref ) if $par{nac_mode} eq "carry";
+    align_unreferenced_pairs( \%ref );
+
+    write_vectors("nad_vectors");
+    adjust_phase();
+    copy( "nad_vectors", "newh" ) or die "$mdle Copy failed: $!";
+    update_phase_ref( \%ref );
+    print_nacme() if $par{print_extracted};
 }
 
 sub read_nacme {
     #
-    #====================================================================================
+    # Couplings d_IJ = <I|d/dR J> from "NAC d^x_IJ (CI part)" blocks, stored as h_ij with
+    # i > j. Q-Chem prints d_AB for State A / State B, and d_BA = -d_AB.
+    # If a pair appears in more than one job, the first job's vector is used.
     #
-    # This subroutine reads all available nonadiabatic coupling vectors from Q-Chem output.
-    # It parses "State A" / "State B" sections and the "NAC d^x_IJ (CI part)" blocks.
-    #
-    #------------------------------------------------------------------------------------
-    #
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Reading coupling vectors.\n", $istep, $kt ); }
-
-    open( my $fh_out, '<', $qchem_out ) or die "Could not open '$qchem_out': $!";
-    my @lines = <$fh_out>;
-    close $fh_out;
-
-    my $line_num = 0;
-    my $curr_state_A = -1;
-    my $curr_state_B = -1;
-
-    while ($line_num < @lines) {
-        my $line = $lines[$line_num];
-
-        # Capture State A and State B indices
-        if ( $line =~ /State A:.*:\s+(\d+)\// ) {
-            $curr_state_A = $1;
-        }
-        if ( $line =~ /State B:.*:\s+(\d+)\// ) {
-            $curr_state_B = $1;
-        }
-
-        # Find the NAC table within this block
-        if ( $line =~ /^\s*NAC d\^x_IJ \(CI part\), a\.u\./ ) {
-
-            if ($curr_state_A == -1 || $curr_state_B == -1) {
-                 if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Found NAC block but states undefined. Skipping.\n", $istep, $kt ); }
-                 $line_num++;
-                 next;
-            }
-
-            $line_num += 3; # Skip Header, Atom Label, and Separator lines
-
-            my $higher_state = ($curr_state_A > $curr_state_B) ? $curr_state_A : $curr_state_B;
-            my $lower_state = ($curr_state_A < $curr_state_B) ? $curr_state_A : $curr_state_B;
-
-            # NewtonX uses lower triangular matrix indexing
-            # nc = (i-1)*i/2 + j - 1 for i > j
-            my $nc_index = (($higher_state-1)*($higher_state-2)/2) + $lower_state -1;
-
-            for (my $ia = 0; $ia < $nat; $ia++) {
-                my $dline = $lines[$line_num + $ia];
-                my @F = split(/\s+/, $dline);
-                my $idx_offset = ($F[0] eq "") ? 1 : 0;
-
-                # QChem computes d_IJ = <I|grad|J>
-                # NewtonX wants h_IJ = <I|grad|J> (usually) but checks phases carefully.
-                # Standard convention for NX: h_IJ = <I|d/dR|J>
-                # We store h_IJ for I > J.
-
-                # Note: d_JI = -d_IJ.
-                # If Q-Chem printed d_AB where A > B, we use it directly.
-                # If Q-Chem printed d_AB where A < B, then d_BA = -d_AB.
-
-                # Check Q-Chem print order vs State ID.
-                # The output says "NAC d^x_IJ". Usually I=StateA, J=StateB.
-                # If StateA=3, StateB=1 (A>B), we read d_31.
-                # If StateA=1, StateB=3 (A<B), we read d_13.
-
-                # We need h_31.
-                # h_31 = d_31.
-                # h_31 = -d_13.
-
-                my $val_x = $F[$idx_offset + 1];
-                my $val_y = $F[$idx_offset + 2];
-                my $val_z = $F[$idx_offset + 3];
-
-                my $sign = 1.0;
-                if ($curr_state_A < $curr_state_B) {
-                    $sign = -1.0;
-                }
-
-                $hx[$nc_index][$ia] = $sign * $val_x;
-                $hy[$nc_index][$ia] = $sign * $val_y;
-                $hz[$nc_index][$ia] = $sign * $val_z;
+    %computed_pair = ();
+    for my $jl (@job_text) {
+        my ( $A, $B ) = ( -1, -1 );
+        for my $i ( 0 .. $#$jl ) {
+            my $l = $jl->[$i];
+            if ( $l =~ /State A:.*:\s+(\d+)\// ) { $A = $1; }
+            if ( $l =~ /State B:.*:\s+(\d+)\// ) { $B = $1; }
+            next unless $l =~ /^\s*NAC d\^x_IJ \(CI part\), a\.u\./;
+            die "$mdle NAC block without a State A/B header\n" if $A < 1 || $B < 1;
+            next if $A > $nstat || $B > $nstat;
+            my $k = pair_index( $A, $B );
+            next if $computed_pair{$k}++;
+            my $sign = ( $A > $B ) ? 1.0 : -1.0;
+            my $v = read_block( $jl, $i );
+            for my $ia ( 0 .. $nat - 1 ) {
+                $hx[$k][$ia] = $sign * $v->[$ia][0];
+                $hy[$k][$ia] = $sign * $v->[$ia][1];
+                $hz[$k][$ia] = $sign * $v->[$ia][2];
             }
         }
-        $line_num++;
+    }
+    for my $s ( grep { $_ != $nstatdyn } 1 .. $nstat ) {
+        die "$mdle Coupling between active state $nstatdyn and state $s missing in $qchem_out\n"
+            unless $computed_pair{ pair_index( $nstatdyn, $s ) };
+    }
+    if ( $par{nac_mode} eq "full" && keys %computed_pair != $ncoup ) {
+        die "$mdle nac_mode = full but only " . scalar( keys %computed_pair ) . " of $ncoup couplings were found\n";
     }
 }
 
-sub write_nacme {
-    #
-    #====================================================================================
-    #
-    # This subroutine writes @h to a file and prints the non-zero couplings.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Writing coupling vectors.\n", $istep, $kt ); }
-
+sub write_vectors {
     my ($file) = @_;
-    open( OUT, ">$file" ) or die "Cannot write to $file";
-
-    for ( $nc = 0; $nc <= $ncoup - 1; $nc++ ) {
-        for ( $ia = 0; $ia <= $nat - 1; $ia++ ) {
-            print OUT "$hx[$nc][$ia]  $hy[$nc][$ia]  $hz[$nc][$ia]\n";
-        }
+    open( my $fo, '>', $file ) or die "$mdle Cannot write $file";
+    for my $k ( 0 .. $ncoup - 1 ) {
+        for my $ia ( 0 .. $nat - 1 ) { print $fo "$hx[$k][$ia]  $hy[$k][$ia]  $hz[$k][$ia]\n"; }
     }
-    close(OUT);
+    close($fo);
+}
 
-    # Print non-zero NACs to STDOUT if requested
-    # Only print for the final "nad_vectors" file to avoid duplication during initialization
-    if ($print_extracted && $file eq "nad_vectors") {
-        print_STDOUT( "Non-adiabatic couplings (a.u.):\n", $istep, $kt );
-        my $printed_header = 0;
-        my $nc_index = 0;
-        for (my $i = 2; $i <= $nstat; $i++) {
-            for (my $j = 1; $j < $i; $j++) {
-
-                # Filter: Only process if this pair involves the current dynamics state (nstatdyn)
-                # But we still need to increment nc_index for every pair!
-                my $is_relevant = ($i == $nstatdyn || $j == $nstatdyn);
-
-                if ($is_relevant) {
-                    my $is_zero = 1;
-                    for ($ia = 0; $ia <= $nat - 1; $ia++) {
-                        if ($hx[$nc_index][$ia] != 0.0 || $hy[$nc_index][$ia] != 0.0 || $hz[$nc_index][$ia] != 0.0) {
-                            $is_zero = 0;
-                            last;
-                        }
-                    }
-
-                    if (!$is_zero) {
-                        if (!$printed_header) {
-                            print_STDOUT( "--------------------------------------------------\n", $istep, $kt );
-                            $printed_header = 1;
-                        }
-                        my $header = sprintf("Coupling between state %d and state %d:\n", $j, $i);
-                        print_STDOUT( $header, $istep, $kt );
-                        print_STDOUT( "Atom          X               Y               Z\n", $istep, $kt );
-                        for ($ia = 0; $ia <= $nat - 1; $ia++) {
-                            my $atom_num = $ia + 1;
-                            my $line_to_print = sprintf("%-4d %15.8f %15.8f %15.8f\n", $atom_num, $hx[$nc_index][$ia], $hy[$nc_index][$ia], $hz[$nc_index][$ia]);
-                            print_STDOUT($line_to_print, $istep, $kt);
-                        }
-                        print_STDOUT( "--------------------------------------------------\n", $istep, $kt );
-                    }
-                }
-                $nc_index++;
+sub print_nacme {
+    print_STDOUT( "Nonadiabatic couplings (a.u.):\n", $istep, $kt );
+    for my $i ( 2 .. $nstat ) {
+        for my $j ( 1 .. $i - 1 ) {
+            my $k = pair_index( $i, $j );
+            my $src = $computed_pair{$k} ? "computed" : ( $par{nac_mode} eq "carry" ? "carried" : "not computed" );
+            next if $src eq "not computed";
+            print_STDOUT( "Coupling between state $j and state $i ($src):\n", $istep, $kt );
+            for my $ia ( 0 .. $nat - 1 ) {
+                print_STDOUT( sprintf( "%-4d %15.8f %15.8f %15.8f\n", $ia + 1, $hx[$k][$ia], $hy[$k][$ia], $hz[$k][$ia] ), $istep, $kt );
             }
         }
-        print_STDOUT("\n", $istep, $kt);
     }
+    print_STDOUT( "\n", $istep, $kt );
 }
 
 sub adjust_phase {
     #
-    #====================================================================================
+    # NewtonX escalar: flip each coupling so that it points along its value at t-dt.
     #
-    # This subroutine computes cos(q) where q is the angle between couplings at t and t-Dt.
-    #
-    #------------------------------------------------------------------------------------
-    #
-
-    if ( $lvprt >= 3 ) { print_STDOUT( "$mdle Fixing the coupling phase.\n", $istep, $kt ); }
-
-    copy( "nad_vectors", "newh" ) or die "Copy failed: $!";
-
+    copy( "nad_vectors", "newh" ) or die "$mdle Copy failed: $!";
     $retval = callprogsp( $mld, "escalar", $mdle );
-    if ( $retval != 0 ) {
-        die "$mdle is dying now\n";
-    }
-    copy( "nadv", "nad_vectors" ) or die "Copy failed: $!";
-
-    if ( $lvprt >= 3 ) { copy( "escalar.log", "../$DEBUG/." ) or die "Copy failed: $!"; }
-
+    die "$mdle escalar failed\n" if $retval != 0;
+    copy( "nadv", "nad_vectors" ) or die "$mdle Copy failed: $!";
+    if ( $lvprt >= 3 ) { copy( "escalar.log", "../$DEBUG/." ) or die "$mdle Copy failed: $!"; }
 }
 
+#------------------------------------------------------------------------------------
+# Phase reference: the last phase-corrected vector of every pair, kept across steps in
+# INFO_RESTART/nac_phase_ref. escalar can only compare with t-dt; a pair that was not
+# computed at t-dt (after a hop, in "active" mode) is aligned to this reference instead.
+#------------------------------------------------------------------------------------
+
 sub read_vector_file {
-    #
-    # Read a coupling file (ncoup*nat lines of x y z) into [nc][ia] = [x,y,z].
-    #
     my ($file) = @_;
     my @v;
     open( my $fh, '<', $file ) or die "$mdle Cannot open $file: $!";
-    for ( my $k = 0; $k < $ncoup; $k++ ) {
-        for ( my $ja = 0; $ja < $nat; $ja++ ) {
+    for my $k ( 0 .. $ncoup - 1 ) {
+        for my $ia ( 0 .. $nat - 1 ) {
             my $l = <$fh>;
-            die "$mdle $file is truncated" unless defined $l;
-            $l =~ s/^\s+//;
-            $v[$k][$ja] = [ ( split( /\s+/, $l ) )[ 0 .. 2 ] ];
+            die "$mdle $file is truncated\n" unless defined $l;
+            $v[$k][$ia] = [ ( split( ' ', $l ) )[ 0 .. 2 ] ];
         }
     }
     close($fh);
@@ -780,111 +576,111 @@ sub read_vector_file {
 }
 
 sub pair_dot {
-    #
-    # Returns (u.v, |u|, |v|) for two [ia] = [x,y,z] vectors.
-    #
     my ( $u, $v ) = @_;
     my ( $uv, $uu, $vv ) = ( 0.0, 0.0, 0.0 );
-    for ( my $ja = 0; $ja < $nat; $ja++ ) {
-        for my $k ( 0 .. 2 ) {
-            $uv += $u->[$ja][$k] * $v->[$ja][$k];
-            $uu += $u->[$ja][$k]**2;
-            $vv += $v->[$ja][$k]**2;
+    for my $ia ( 0 .. $nat - 1 ) {
+        for my $c ( 0 .. 2 ) {
+            $uv += $u->[$ia][$c] * $v->[$ia][$c];
+            $uu += $u->[$ia][$c]**2;
+            $vv += $v->[$ia][$c]**2;
         }
     }
     return ( $uv, sqrt($uu), sqrt($vv) );
 }
 
+sub current_vector {
+    my ($k) = @_;
+    return [ map { [ $hx[$k][$_], $hy[$k][$_], $hz[$k][$_] ] } 0 .. $nat - 1 ];
+}
+
 sub read_phase_ref {
     #
-    #====================================================================================
-    #
-    # Read the persistent phase reference: for each pair, the last phase-corrected
-    # coupling vector and the time it was computed. Returns nc => {t, vec}.
-    # File format per pair: "pair <nc> <t>" header followed by nat lines of x y z.
-    #
-    #------------------------------------------------------------------------------------
+    # Format per pair: "pair <k> <t>" followed by nat lines of x y z.
+    # Entries from this time or later (reused folder, restart from an earlier point) are ignored.
     #
     my %ref;
     return %ref unless -s $phase_ref_file;
-
     open( my $fh, '<', $phase_ref_file ) or die "$mdle Cannot open $phase_ref_file: $!";
     while ( my $l = <$fh> ) {
         next unless $l =~ /^pair\s+(\d+)\s+(\S+)/;
         my ( $k, $tref ) = ( $1, $2 );
         my @vec;
-        for ( my $ja = 0; $ja < $nat; $ja++ ) {
+        for my $ia ( 0 .. $nat - 1 ) {
             my $d = <$fh>;
-            die "$mdle $phase_ref_file is truncated" unless defined $d;
-            $d =~ s/^\s+//;
-            $vec[$ja] = [ ( split( /\s+/, $d ) )[ 0 .. 2 ] ];
+            die "$mdle $phase_ref_file is truncated\n" unless defined $d;
+            $vec[$ia] = [ ( split( ' ', $d ) )[ 0 .. 2 ] ];
         }
-        # Ignore references from this step or later (reused directory, restart from an earlier point)
-        next if $tref > $t - 1e-6;
+        next if $tref > $t - 1e-6 || $k >= $ncoup;
         $ref{$k} = { t => $tref, vec => \@vec };
     }
     close($fh);
     return %ref;
 }
 
+sub carry_missing_pairs {
+    #
+    # nac_mode = carry: pairs not computed this step take their last phase-corrected value.
+    #
+    my ($ref) = @_;
+    for my $k ( 0 .. $ncoup - 1 ) {
+        next if $computed_pair{$k} || !exists $ref->{$k};
+        for my $ia ( 0 .. $nat - 1 ) {
+            ( $hx[$k][$ia], $hy[$k][$ia], $hz[$k][$ia] ) = @{ $ref->{$k}{vec}[$ia] };
+        }
+    }
+}
+
 sub align_unreferenced_pairs {
-    #
-    #====================================================================================
-    #
-    # For every pair that is computed now but is zero in oldh (no t-dt reference for
-    # escalar), flip the sign of @h if it points against the last known phase-corrected
-    # vector of that pair.
-    #
-    #------------------------------------------------------------------------------------
-    #
     my ($ref) = @_;
     my @old = read_vector_file("oldh");
     my $eps = 1e-6;
-
-    for ( my $k = 0; $k < $ncoup; $k++ ) {
-        my @cur = map { [ $hx[$k][$_], $hy[$k][$_], $hz[$k][$_] ] } 0 .. $nat - 1;
-        my ( undef, undef, $ncur ) = pair_dot( \@cur, \@cur );
+    for my $k ( 0 .. $ncoup - 1 ) {
+        next unless $computed_pair{$k};
+        my $cur = current_vector($k);
+        my ( undef, undef, $ncur ) = pair_dot( $cur, $cur );
         my ( undef, $nold, undef ) = pair_dot( $old[$k], $old[$k] );
-        next if $ncur <= $eps;  # not computed now
-        next if $nold * $ncur > $eps;  # escalar has a t-dt reference (same test as escalar)
+        next if $ncur <= $eps;
+        next if $nold * $ncur > $eps;    # escalar has a t-dt reference (same test as escalar)
 
         if ( !exists $ref->{$k} ) {
-            print_STDOUT( "$mdle Coupling pair $k: no phase reference available (first appearance); sign kept as computed.\n", $istep, $kt );
+            print_STDOUT( "$mdle Coupling pair $k: first appearance, sign kept as computed.\n", $istep, $kt )
+                if $istep > 0;
             next;
         }
-
-        my ( $dot, $nref, undef ) = pair_dot( $ref->{$k}{vec}, \@cur );
+        my ( $dot, $nref, undef ) = pair_dot( $ref->{$k}{vec}, $cur );
         next if $nref <= $eps;
         my $cos  = $dot / ( $nref * $ncur );
         my $sign = ( $cos < 0.0 ) ? -1.0 : 1.0;
-        for ( my $ja = 0; $ja < $nat; $ja++ ) {
-            $hx[$k][$ja] *= $sign;
-            $hy[$k][$ja] *= $sign;
-            $hz[$k][$ja] *= $sign;
+        for my $ia ( 0 .. $nat - 1 ) {
+            $hx[$k][$ia] *= $sign;
+            $hy[$k][$ia] *= $sign;
+            $hz[$k][$ia] *= $sign;
         }
-        print_STDOUT( sprintf( "$mdle Coupling pair %d: aligned to stored reference from t=%s (cos=%+.4f, phase=%+d)\n", $k, $ref->{$k}{t}, $cos, $sign ), $istep, $kt );
-        if ( abs($cos) < $phase_ref_warn ) {
-            print_STDOUT( sprintf( "$mdle WARNING: coupling pair %d is nearly orthogonal to its stored reference (|cos|=%.3f); phase assignment is unreliable.\n", $k, abs($cos) ), $istep, $kt );
+        print_STDOUT( sprintf( "$mdle Coupling pair %d: aligned to stored reference from t=%s (cos=%+.4f, phase=%+d)\n",
+            $k, $ref->{$k}{t}, $cos, $sign ), $istep, $kt );
+        if ( abs($cos) < $par{phase_warn} ) {
+            print_STDOUT( sprintf( "$mdle WARNING: coupling pair %d is nearly orthogonal to its stored reference (|cos|=%.3f); its sign is uncertain.\n",
+                $k, abs($cos) ), $istep, $kt );
         }
     }
 }
 
 sub update_phase_ref {
     #
-    #====================================================================================
-    #
-    # Store the phase-corrected couplings (nad_vectors after escalar) of every pair
-    # computed at this step; keep older entries for pairs not computed now.
-    #
-    #------------------------------------------------------------------------------------
+    # Store the phase-corrected vectors (nad_vectors after escalar) of pairs computed now.
     #
     my ($ref) = @_;
     my @cur = read_vector_file("nad_vectors");
-    my $eps = 1e-6;
-
-    for ( my $k = 0; $k < $ncoup; $k++ ) {
+    for my $k ( 0 .. $ncoup - 1 ) {
+        next unless $computed_pair{$k};
         my ( undef, $n, undef ) = pair_dot( $cur[$k], $cur[$k] );
-        $ref->{$k} = { t => $t, vec => $cur[$k] } if $n > $eps;
+        $ref->{$k} = { t => $t, vec => $cur[$k] } if $n > 1e-6;
+        # Keep @h in sync with what NewtonX uses (for printing)
+        for my $ia ( 0 .. $nat - 1 ) { ( $hx[$k][$ia], $hy[$k][$ia], $hz[$k][$ia] ) = @{ $cur[$k][$ia] }; }
+    }
+    for my $k ( 0 .. $ncoup - 1 ) {
+        next if $computed_pair{$k};
+        for my $ia ( 0 .. $nat - 1 ) { ( $hx[$k][$ia], $hy[$k][$ia], $hz[$k][$ia] ) = @{ $cur[$k][$ia] }; }
     }
 
     my $dir = $phase_ref_file;
@@ -894,9 +690,7 @@ sub update_phase_ref {
     open( my $fh, '>', $tmp ) or die "$mdle Cannot write $tmp: $!";
     for my $k ( sort { $a <=> $b } keys %$ref ) {
         print $fh "pair $k $ref->{$k}{t}\n";
-        for ( my $ja = 0; $ja < $nat; $ja++ ) {
-            printf $fh "%22.12e %22.12e %22.12e\n", @{ $ref->{$k}{vec}[$ja] };
-        }
+        printf $fh "%22.12e %22.12e %22.12e\n", @{ $ref->{$k}{vec}[$_] } for 0 .. $nat - 1;
     }
     close($fh);
     rename( $tmp, $phase_ref_file ) or die "$mdle Cannot rename $tmp: $!";
