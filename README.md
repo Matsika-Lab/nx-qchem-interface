@@ -36,7 +36,17 @@ During a NewtonX dynamics run, this script is called at every time step to perfo
    * **Energies:** Scans for `Total energy` entries associated with EOM transitions, validates the state count, and writes them to `epot` (in Hartrees).
    * **Gradients:** Locates `G_I` and `G_J` gradient blocks. It maps the forces to the correct state index, outputting the active state gradient to `grad` and all gradients to `grad.all`. (For single-state calculations, it falls back to parsing the `Final gradient`).
    * **Couplings (NACMEs):** Extracts the spatial derivative couplings from `NAC d^x_IJ (CI part)` blocks. The parser strictly manages Q-Chem's output order mapping $I$ and $J$ indices to NewtonX's expected lower-triangular matrix format, adjusting mathematical signs ($d_{JI} = -d_{IJ}$) as necessary.
-5. **Phase Continuity Correction:** Because quantum mechanical wavefunctions carry an arbitrary phase sign, the script interfaces with NewtonX's internal `escalar` utility. It calculates the dot product between the coupling vectors at $t$ and $t-\Delta t$, smoothly correcting any unphysical phase inversions before writing the final `nad_vectors`.
+5. **Phase Continuity Correction:** Because quantum mechanical wavefunctions carry an arbitrary phase sign, the script interfaces with NewtonX's internal `escalar` utility. It calculates the dot product between the coupling vectors at $t$ and $t-\Delta t$, correcting any unphysical phase inversions before writing the final `nad_vectors`. Couplings with no value at $t-\Delta t$ (which happens after every surface hop) are first aligned to their last known phase-corrected vector; see below.
+
+---
+
+## **Phase Tracking Across Surface Hops**
+
+With `CALC_NAC 2`, Q-Chem's EOM-CC module only computes the couplings between the `CC_STATE_TO_OPT` state (the active state) and the other states. Couplings between two inactive states are not available and are written as zero. Running without `CC_STATE_TO_OPT` to get all pairs makes Q-Chem stop with an error.
+
+`escalar` fixes the sign of each coupling $\mathbf{d}_{IJ}(t)$ by requiring $\mathbf{d}_{IJ}(t)\cdot\mathbf{d}_{IJ}(t-\Delta t) > 0$. After a hop, some couplings that are needed now were zero at $t-\Delta t$. `escalar` then has no reference and keeps the arbitrary sign Q-Chem produced. Earlier versions of this script were affected: in a uracil EOM-IP-CCSD trajectory, the $\mathbf{d}_{32}$ coupling came back after a hop with its sign reversed.
+
+The interface now keeps the last phase-corrected vector of every pair in `INFO_RESTART/nac_phase_ref`. When a pair has no reference at $t-\Delta t$, its new vector is aligned to the stored one before `escalar` runs. Each alignment is printed to the NewtonX log, together with a warning if the two vectors are nearly orthogonal ($|\cos\theta| < 0.3$), in which case the sign cannot be assigned reliably. The file needs no setup. Stored vectors from the current time or later are ignored, so restarting from an earlier point is safe.
 
 ---
 
