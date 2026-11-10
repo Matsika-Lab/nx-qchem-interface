@@ -17,21 +17,25 @@ Overlap-based couplings (`vdoth = 1` or negative in NewtonX) are not available, 
 
 ## Where couplings enter the dynamics
 
-NewtonX propagates the electronic coefficients $c_k$ along the classical trajectory:
+NewtonX propagates the electronic coefficients $`c_k`$ along the classical trajectory:
 
-$$\frac{dc_k}{dt} = -\frac{i}{\hbar}E_k c_k - \sum_l c_l\,\sigma_{kl}, \qquad \sigma_{kl} = \mathbf{v}\cdot\mathbf{d}_{kl}$$
+```math
+\frac{dc_k}{dt} = -\frac{i}{\hbar}E_k c_k - \sum_l c_l\,\sigma_{kl}, \qquad \sigma_{kl} = \mathbf{v}\cdot\mathbf{d}_{kl}
+```
 
-Here $E_k$ is the energy of state $k$, $\mathbf{v}$ the nuclear velocity, and $\sigma_{kl}$ the time-derivative coupling. In words: population moves between two states at a rate set by how fast the nuclei move along the coupling vector between them. The probability of hopping from the active state $a$ to state $k$ is proportional to $-\mathrm{Re}(c_k c_a^{*}\,\sigma_{ka})$.
+Here $`E_k`$ is the energy of state $`k`$, $`\mathbf{v}`$ the nuclear velocity, and $`\sigma_{kl}`$ the time-derivative coupling. In words: population moves between two states at a rate set by how fast the nuclei move along the coupling vector between them. The probability of hopping from the active state $`a`$ to state $`k`$ is proportional to $`-\mathrm{Re}(c_k c_a^{*}\,\sigma_{ka})`$.
 
 ## Nonadiabatic coupling vectors (`vdoth = 0`)
 
-The nonadiabatic coupling (derivative coupling) vector between states $I$ and $J$ is
+The nonadiabatic coupling (derivative coupling) vector between states $`I`$ and $`J`$ is
 
-$$\mathbf{d}_{IJ} = \langle \Psi_I \,|\, \nabla_{\mathbf{R}} \Psi_J \rangle = \frac{\mathbf{h}_{IJ}}{E_J - E_I}, \qquad \mathbf{h}_{IJ} = \langle \Psi_I \,|\, \nabla_{\mathbf{R}} \hat H \,|\, \Psi_J \rangle$$
+```math
+\mathbf{d}_{IJ} = \langle \Psi_I \,|\, \nabla_{\mathbf{R}} \Psi_J \rangle = \frac{\mathbf{h}_{IJ}}{E_J - E_I}, \qquad \mathbf{h}_{IJ} = \langle \Psi_I \,|\, \nabla_{\mathbf{R}} \hat H \,|\, \Psi_J \rangle
+```
 
-In words: how much state $J$ changes, as seen by state $I$, when the nuclei move. It grows as the two states approach each other in energy.
+In words: how much state $`J`$ changes, as seen by state $`I`$, when the nuclei move. It grows as the two states approach each other in energy.
 
-Q-Chem computes $\mathbf{h}_{IJ}$ with Szalay's summed-state method, $\mathbf{h}_{IJ} = \tfrac12(\mathbf{G}_{I+J} - \mathbf{G}_I - \mathbf{G}_J)$, from analytic gradients of the two states and of a fictitious summed state (Tajti and Szalay, 2009; Faraji, Matsika and Krylov, 2018). It prints $\mathbf{d}_{IJ}$ as `NAC d^x_IJ (CI part)`, in bohr⁻¹, and the interface passes it to NewtonX unchanged apart from its sign (see [Coupling signs](#coupling-signs)).
+Q-Chem computes $`\mathbf{h}_{IJ}`$ with Szalay's summed-state method, $`\mathbf{h}_{IJ} = \tfrac12(\mathbf{G}_{I+J} - \mathbf{G}_I - \mathbf{G}_J)`$, from analytic gradients of the two states and of a fictitious summed state (Tajti and Szalay, 2009; Faraji, Matsika and Krylov, 2018). It prints $`\mathbf{d}_{IJ}`$ as `NAC d^x_IJ (CI part)`, in bohr⁻¹, and the interface passes it to NewtonX unchanged apart from its sign (see [Coupling signs](#coupling-signs)).
 
 **Cost.** One Q-Chem job gives the couplings between its target state and all other states, plus the gradients of all states. How many jobs run per step is set by [`nac_mode`](par-reference.md#nac_mode).
 
@@ -39,9 +43,11 @@ Q-Chem computes $\mathbf{h}_{IJ}$ with Szalay's summed-state method, $\mathbf{h}
 
 The Baeck-An approximation estimates the time-derivative coupling from the energy gap alone. NewtonX computes it from the energies of the last few steps:
 
-$$\sigma_{IJ} \approx \frac{\mathrm{sign}(\Delta E_{IJ})}{2}\sqrt{\frac{\ddot{\Delta E}_{IJ}}{\Delta E_{IJ}}}, \qquad \Delta E_{IJ} = E_I - E_J$$
+```math
+\sigma_{IJ} \approx \frac{\mathrm{sign}(\Delta E_{IJ})}{2}\sqrt{\frac{\ddot{\Delta E}_{IJ}}{\Delta E_{IJ}}}, \qquad \Delta E_{IJ} = E_I - E_J
+```
 
-Here $\ddot{\Delta E}_{IJ}$ is the second time derivative of the gap. In words: a gap that closes and reopens quickly signals strong coupling. NewtonX sets $\sigma_{IJ} = 0$ when the gap exceeds `BA_DE` (default 2 eV), and these thresholds are set in NewtonX's `auxnac.inp`. After a hop, momentum is rescaled along the velocity, because there is no coupling vector.
+Here $`\ddot{\Delta E}_{IJ}`$ is the second time derivative of the gap. In words: a gap that closes and reopens quickly signals strong coupling. NewtonX sets $`\sigma_{IJ} = 0`$ when the gap exceeds `BA_DE` (default 2 eV), and these thresholds are set in NewtonX's `auxnac.inp`. After a hop, momentum is rescaled along the velocity, because there is no coupling vector.
 
 **Cost.** One gradient-only Q-Chem job per step, with no `CALC_NAC`. In our [benchmark](benchmarks/README.md) a gradient job took 36% less time than a coupling job, and n − 1 coupling jobs are replaced by one. The template comes from `JOB_AD/qchem.inp` (or `JOB_NAD/qchem.inp` if there is no `JOB_AD`); the interface removes `CALC_NAC` and sets `JOBTYPE FORCE`.
 
@@ -63,7 +69,7 @@ Setting `nac_mode` to `full`, `carry` or `active` overrides NewtonX's list. With
 
 - **`full`** computes every pair, every step.
 - **`carry`** computes the pairs with the active state and keeps the last computed value of the others, sign-aligned. Those values are stale until the pair is computed again.
-- **`active`** computes the pairs with the active state only. Couplings between two inactive states are zero, so population cannot flow directly between them. The amplitudes $c_k$ of inactive states then drift, and so do the probabilities of later hops into those states. The error is largest when two inactive states are close in energy, and NewtonX's decoherence correction reduces it.
+- **`active`** computes the pairs with the active state only. Couplings between two inactive states are zero, so population cannot flow directly between them. The amplitudes $`c_k`$ of inactive states then drift, and so do the probabilities of later hops into those states. The error is largest when two inactive states are close in energy, and NewtonX's decoherence correction reduces it.
 
 The [methane examples](../examples/README.md) run one initial condition in the three modes.
 
@@ -73,7 +79,7 @@ NewtonX hands the interface the `JOB_AD` input for adiabatic dynamics, and for a
 
 ## Coupling signs
 
-Each Q-Chem run fixes the sign of every wavefunction arbitrarily, so a coupling vector can come back with the opposite sign from one step to the next: $\mathbf{d}_{kl} \to s_k s_l\,\mathbf{d}_{kl}$ with $s = \pm 1$. A flipped sign reverses $\sigma_{kl}$ and sends population the wrong way.
+Each Q-Chem run fixes the sign of every wavefunction arbitrarily, so a coupling vector can come back with the opposite sign from one step to the next: $`\mathbf{d}_{kl} \to s_k s_l\,\mathbf{d}_{kl}`$ with $`s = \pm 1`$. A flipped sign reverses $`\sigma_{kl}`$ and sends population the wrong way.
 
 NewtonX's `escalar` program flips each new vector so that it points along its value one step earlier. When a pair has no value one step earlier, for example right after a hop, the interface first aligns it to the last sign-corrected vector stored for that pair in `INFO_RESTART/nac_phase_ref`. It reports each alignment in `RESULTS/nx.log`:
 
