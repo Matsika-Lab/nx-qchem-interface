@@ -1,0 +1,1184 @@
+
+          ============================================================  
+                                     NEWTON-X                           
+                   Newtonian dynamics close to the crossing seam        
+          ============================================================  
+
+                                  www.newtonx.org                       
+
+    Newton-X version 2.4 (build 06, 2021-11-11)
+    www.newtonx.org
+----------------------------------------------------------------------
+    The Newton-X program is distributed free of charge for non-
+    commercial and non-profit uses. You may use the program freely 
+    and adapt the code to your needs. Please, if you have any 
+    enhancements, share them with us. You are, however, not allowed 
+    to re-distribute code or binaries in parts or total. Anyone 
+    intending to use Newton-X must contact us. This program is 
+    shipped to the user "as is". There is no guarantee that it will 
+    work as described. Usage is at your own risk, there is no 
+    liability taken for any damage or loss of data and/or money. 
+    If you experience problems, you may contact the developers and 
+    a community of users at the Newton-X discussion group, but bear 
+    in mind that there is no kind of official support for Newton-X.
+
+    Cite Newton-X as:
+    M. Barbatti, G. Granucci, M. Ruckenbauer, F. Plasser, 
+    R. Crespo-Otero, J. Pittner, M. Persico, H. Lischka, NEWTON-X: 
+    a package for Newtonian dynamics close to the crossing seam, 
+    version 2.3, www.newtonx.org (2017).
+
+    M. Barbatti, M. Ruckenbauer, F. Plasser, J. Pittner, G. Granucci, 
+    M. Persico, H. Lischka, WIREs: Comp. Mol. Sci., 4, 26 (2014).
+
+    Please, check the documentation for references to specific 
+    methods and algorithms.
+
+    For download the program, documentation, and tutorial, visit:
+    http://www.newtonx.org
+
+    For support, visit the Newton-X discussion group at:
+    https://groups.google.com/d/forum/newtonx
+----------------------------------------------------------------------
+
+
+Newton-X path: /home/dakshitha/qchem_interface_test/work/nxbin
+
+Base directory: /home/dakshitha/qchem_interface_test/work/runs_tight/ethylene_eomsf_cc8
+
+STARTING MOLECULAR DYNAMICS   
+
+	Initial parameters:
+	Nat       = 6
+	istep     = 0
+	nstat     = 3
+	nstatdyn  = 3
+	ndamp     = 0
+	kt        = 1
+	dt        = 0.5000
+	t         = 0.0000
+	tmax      = 100.0000
+	nintc     = 12
+	mem       = 200
+	nxrestart = 0
+	thres     = 100.00
+	killstat  = 1
+	timekill  = 0.0000
+	prog      = 22.0
+	lvprt     = 1
+	etot_jump = 0.500
+	etot_drift= 0.500
+
+Non-adiabatic dynamics was requested.
+
+
+moldyn.pl: Parameters for nonadiabatic dynamics (jiri.inp):
+	kross        = 1
+	cascade      = 0
+	current      = 0
+	never_state  = 0
+	include_pair = 0
+	e_ci         = 0.2
+	ci_cons      = 1
+	cio_options  = NULL
+	cisc_options = NULL
+	idalton      = 64
+	cprog        = 0
+	coptda       = 1
+	ncore        = 0
+	ndisc        = 0
+	blasthread   = 1
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+Dynamics with QChem
+
+
+moldyn.pl: Parameters for nonadiabatic dynamics (sh.inp):
+	integrator   = 5
+	phase        = 1
+	nohop        = 0
+	forcesurf    = 1
+	getphase     = 1
+	nrelax       = 0
+	vdoth        = 0
+	tully        = 1
+	ms           = 20
+	mom          = 1
+	adjmom       = 0
+	probmin      = 0
+	popdev       = 0.05
+	decohmod     = 1
+	decay        = 0.1
+	run_complex  = 0
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:41:59 EST 2026
+run-qchem-eom.pl: WARNING: EOM-SF coupling vectors are computed by Q-Chem but are not documented (the Q-Chem manual lists EOM-CC couplings for EE, IP and EA). Check them before production use, or use vdoth = 2 (couplings from energies).
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:41:59 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:43:34 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.33076876
+  State 2: -78.17282579
+  State 3: -78.02998849
+
+Gradient of state 3 (a.u.):
+1         0.01629338     -0.05193424     -0.01149801
+2        -0.01373616      0.00267230      0.06386290
+3        -0.02002013     -0.02868385     -0.04166082
+4         0.00777015      0.05298203     -0.03382986
+5         0.01393894      0.02386717     -0.00487588
+6        -0.00424617      0.00109658      0.02800167
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1        -0.03522121     -0.00117686      0.03697323
+2        -0.04766837      0.01958148     -0.01637454
+3         0.02560576     -0.00520258     -0.00950282
+4         0.01357883      0.00344109     -0.00764212
+5         0.01721869     -0.01479327      0.00138715
+6         0.02648630     -0.00184986     -0.00484091
+Coupling between state 1 and state 3 (computed):
+1         0.00738924     -0.03155885     -0.01649599
+2        -0.04794052      0.05875766     -0.01946284
+3        -0.00389008      0.02101377      0.01489621
+4         0.00389566      0.00839639      0.00334324
+5         0.04374431     -0.04809483      0.02300717
+6        -0.00319861     -0.00851414     -0.00528778
+Coupling between state 2 and state 3 (computed):
+1        -0.24918940      0.22313957     -0.86517024
+2         0.20371451     -0.73401218      1.19358611
+3        -0.31808550      0.13610797      0.14350730
+4         0.51498733     -0.16210132      0.00150672
+5         0.27971779      0.51872384     -0.28525298
+6        -0.43114472      0.01814211     -0.18817691
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:43:34 EST 2026
+---------------------------------------------------------------------------
+moldyn.pl: Surface hopping with SH routine.
+
+
+moldyn.pl: Nonadiabatic dynamics information: 
+             seed       =20261109
+
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 0, TIME 0.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:43:34 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:43:34 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:45:07 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.33430965
+  State 2: -78.17620323
+  State 3: -78.03590576
+
+Gradient of state 3 (a.u.):
+1         0.01620116     -0.00429194     -0.03237288
+2        -0.01391261      0.01016100      0.06988757
+3        -0.02037706     -0.02979545     -0.04452854
+4         0.00866310      0.00553258     -0.00945680
+5         0.01407383      0.02228821     -0.00489508
+6        -0.00464843     -0.00389439      0.02136574
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1        -0.02824598      0.00312804      0.03316352
+2        -0.04714239      0.01497038     -0.01289273
+3         0.02237056     -0.00510700     -0.00890706
+4         0.01143715      0.00052068     -0.00660901
+5         0.01689691     -0.01266330      0.00026997
+6         0.02468374     -0.00084880     -0.00502469
+Coupling between state 1 and state 3 (computed):
+1         0.03383564     -0.02851711     -0.01286093
+2        -0.03890462      0.05957815     -0.02837833
+3        -0.01134863      0.01892752      0.01513657
+4        -0.01241895      0.00775839      0.00411893
+5         0.03307250     -0.04949571      0.02483565
+6        -0.00423594     -0.00825124     -0.00285188
+Coupling between state 2 and state 3 (computed):
+1        -0.16790678      0.24286855     -0.77635007
+2         0.14020689     -0.58684156      0.99651987
+3        -0.28923536      0.11026306      0.13290575
+4         0.42505925     -0.18668658      0.02818877
+5         0.26596949      0.41685745     -0.23042097
+6        -0.37409349      0.00353908     -0.15084335
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:45:07 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 1, TIME 0.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:45:08 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:45:08 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:46:31 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.33172259
+  State 2: -78.17408566
+  State 3: -78.03687608
+
+Gradient of state 3 (a.u.):
+1         0.01751279      0.02048591     -0.04315822
+2        -0.01414603      0.01895420      0.07172795
+3        -0.01911408     -0.02636273     -0.04465322
+4         0.00652168     -0.02335139      0.00578512
+5         0.01344658      0.01875577     -0.00418254
+6        -0.00422094     -0.00848176      0.01448091
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1        -0.02073822      0.00741122      0.02879706
+2        -0.04669119      0.01006622     -0.00837450
+3         0.01902312     -0.00486369     -0.00819174
+4         0.00897378     -0.00233909     -0.00572912
+5         0.01647841     -0.01027090     -0.00106320
+6         0.02295411     -0.00000375     -0.00543851
+Coupling between state 1 and state 3 (computed):
+1         0.06812920     -0.02750850     -0.01002093
+2        -0.03118251      0.06030987     -0.03553176
+3        -0.02009808      0.01772132      0.01594564
+4        -0.03411395      0.00828725      0.00458636
+5         0.02368580     -0.05036212      0.02588365
+6        -0.00642046     -0.00844783     -0.00086296
+Coupling between state 2 and state 3 (computed):
+1        -0.11816454      0.24510551     -0.66697111
+2         0.08726723     -0.45426104      0.78185483
+3        -0.26366182      0.08995530      0.12301638
+4         0.36347533     -0.19974357      0.04805604
+5         0.26221393      0.32401166     -0.17676901
+6        -0.33113014     -0.00506786     -0.10918712
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:46:31 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 2, TIME 1.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:46:34 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:46:34 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:48:05 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.32533508
+  State 2: -78.16884463
+  State 3: -78.03544175
+
+Gradient of state 3 (a.u.):
+1         0.01737012      0.02521921     -0.04692028
+2        -0.01240919      0.02373515      0.07073426
+3        -0.01562116     -0.01982613     -0.04058752
+4         0.00295346     -0.03277113      0.01273670
+5         0.01074417      0.01435384     -0.00282870
+6        -0.00303739     -0.01071094      0.00686554
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1        -0.01249577      0.01152180      0.02417069
+2        -0.04662575      0.00551151     -0.00363985
+3         0.01554743     -0.00447316     -0.00732493
+4         0.00611192     -0.00518014     -0.00486931
+5         0.01608816     -0.00805186     -0.00242262
+6         0.02137401      0.00067185     -0.00591398
+Coupling between state 1 and state 3 (computed):
+1         0.12245104     -0.02969968     -0.00697561
+2        -0.01939233      0.06032674     -0.03921150
+3        -0.03418673      0.01754050      0.01702534
+4        -0.06966112      0.01165144      0.00375908
+5         0.01504409     -0.04958812      0.02509630
+6        -0.01425495     -0.01023089      0.00030638
+Coupling between state 2 and state 3 (computed):
+1        -0.12075240      0.22977282     -0.53973352
+2         0.05699090     -0.34151474      0.56831016
+3        -0.22724609      0.07517987      0.11031459
+4         0.33407278     -0.19923538      0.05792959
+5         0.25826933      0.24571114     -0.12766752
+6        -0.30133452     -0.00991370     -0.06915329
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:48:05 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 3, TIME 1.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:48:06 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:48:06 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:49:45 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.31680115
+  State 2: -78.16211649
+  State 3: -78.03489913
+
+Gradient of state 3 (a.u.):
+1         0.00337112      0.01443216     -0.04751701
+2         0.00292169      0.00143048      0.07104932
+3        -0.00630309     -0.01850240     -0.02476981
+4         0.00223794     -0.00577329      0.00685426
+5         0.00069658      0.01320361     -0.00002145
+6        -0.00292423     -0.00479057     -0.00559531
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1        -0.00333342      0.01551734      0.01929924
+2        -0.04711517      0.00153622      0.00097154
+3         0.01191300     -0.00395764     -0.00627267
+4         0.00277725     -0.00813130     -0.00389678
+5         0.01578650     -0.00618288     -0.00373959
+6         0.01997184      0.00121826     -0.00636175
+Coupling between state 1 and state 3 (computed):
+1         0.20824252     -0.03808648      0.00297646
+2         0.00707928      0.05134053     -0.03202863
+3        -0.05736122      0.01718689      0.01529383
+4        -0.13107968      0.02359278     -0.00293639
+5         0.01070320     -0.03863761      0.01680864
+6        -0.03758410     -0.01539613     -0.00011390
+Coupling between state 2 and state 3 (computed):
+1        -0.23330738      0.16561500     -0.32184109
+2         0.07179780     -0.21815378      0.30017761
+3        -0.12844574      0.05874350      0.07759110
+4         0.33161480     -0.15403643      0.04170098
+5         0.21716541      0.15970512     -0.06990714
+6        -0.25882488     -0.01187342     -0.02772146
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:49:45 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 4, TIME 2.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:49:45 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:49:46 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:51:32 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.30631522
+  State 2: -78.15398636
+  State 3: -78.03809956
+
+Gradient of state 3 (a.u.):
+1        -0.01574191      0.00739202     -0.05044298
+2         0.01720561     -0.01738137      0.06813008
+3         0.00079655     -0.01684112     -0.00562674
+4         0.00746170      0.02088298     -0.00225302
+5        -0.00348323      0.00871986      0.00678960
+6        -0.00623872     -0.00277238     -0.01659693
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.00735253      0.01961199      0.01398259
+2        -0.04813949     -0.00199118      0.00540994
+3         0.00790109     -0.00334377     -0.00499283
+4        -0.00131466     -0.01137588     -0.00268959
+5         0.01550725     -0.00462562     -0.00501443
+6         0.01869328      0.00172446     -0.00669569
+Coupling between state 1 and state 3 (computed):
+1         0.23602882     -0.04054997      0.01481783
+2         0.01839080      0.03174680     -0.01746318
+3        -0.06534781      0.01452959      0.00975611
+4        -0.15527152      0.03132078     -0.01073090
+5         0.01541461     -0.02002307      0.00447588
+6        -0.04921489     -0.01702413     -0.00085575
+Coupling between state 2 and state 3 (computed):
+1        -0.34413610      0.07684374     -0.08874204
+2         0.09094684     -0.11815275      0.06378016
+3        -0.01553090      0.03827254      0.03794028
+4         0.30583328     -0.07345977      0.00818293
+5         0.15109610      0.08457972     -0.02120951
+6        -0.18820920     -0.00808348      0.00004818
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:51:32 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 5, TIME 2.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:51:33 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:51:33 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:53:21 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.29349916
+  State 2: -78.14401900
+  State 3: -78.04222249
+
+Gradient of state 3 (a.u.):
+1        -0.02130904      0.00185822     -0.05227525
+2         0.01687940     -0.00832144      0.05778444
+3         0.00285656     -0.00817298      0.00569351
+4         0.00939161      0.02470115     -0.00433924
+5        -0.00020256     -0.00317022      0.01454763
+6        -0.00761598     -0.00689473     -0.02141110
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.02050540      0.02349271      0.00800007
+2        -0.04978505     -0.00508386      0.00979034
+3         0.00317740     -0.00262271     -0.00344906
+4        -0.00662662     -0.01466257     -0.00129230
+5         0.01523138     -0.00336689     -0.00622010
+6         0.01749748      0.00224331     -0.00682895
+Coupling between state 1 and state 3 (computed):
+1         0.23486838     -0.03675847      0.01917837
+2         0.01194195      0.02116455     -0.01108903
+3        -0.06644321      0.01357369      0.00703432
+4        -0.15417236      0.02955157     -0.01311203
+5         0.02124796     -0.01127538     -0.00126003
+6        -0.04744272     -0.01625597     -0.00075160
+Coupling between state 2 and state 3 (computed):
+1        -0.41359450      0.02912335      0.03622139
+2         0.09794680     -0.09012554     -0.05602123
+3         0.03753714      0.02742884      0.02305992
+4         0.30236724     -0.02106861     -0.01314949
+5         0.13203435      0.05801384     -0.00090923
+6        -0.15629103     -0.00337188      0.01079865
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:53:21 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 6, TIME 3.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:53:22 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:53:22 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:55:22 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.27850428
+  State 2: -78.13235926
+  State 3: -78.04561622
+
+Gradient of state 3 (a.u.):
+1        -0.02254140     -0.00277136     -0.05306305
+2         0.01298809      0.00608965      0.04468492
+3         0.00390464      0.00099593      0.01441755
+4         0.00943825      0.02322434     -0.00429864
+5         0.00410343     -0.01712531      0.02231884
+6        -0.00789301     -0.01041323     -0.02405962
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.03623538      0.02351696      0.00155477
+2        -0.05208824     -0.00743202      0.01497055
+3        -0.00230798     -0.00186994     -0.00155410
+4        -0.01326878     -0.01455105     -0.00087695
+5         0.01500244     -0.00239261     -0.00731685
+6         0.01642717      0.00272867     -0.00677743
+Coupling between state 1 and state 3 (computed):
+1         0.23271547     -0.03059841      0.01940730
+2         0.00360274      0.01442444     -0.00764093
+3        -0.06764913      0.01323479      0.00609036
+4        -0.15046630      0.02509812     -0.01355726
+5         0.02631967     -0.00664509     -0.00398065
+6        -0.04452245     -0.01551385     -0.00031882
+Coupling between state 2 and state 3 (computed):
+1        -0.49206296     -0.00850136      0.14049464
+2         0.10976900     -0.09075003     -0.15412498
+3         0.07484307      0.01905219      0.01898604
+4         0.31979585      0.02913571     -0.03263378
+5         0.13336383      0.04971414      0.01081173
+6        -0.14570878      0.00134936      0.01646634
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:55:23 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 7, TIME 3.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:55:26 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:55:26 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 17:57:51 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.26195367
+  State 2: -78.11960272
+  State 3: -78.04799068
+
+Gradient of state 3 (a.u.):
+1        -0.02158066     -0.00402943     -0.05420123
+2         0.00844455      0.01933844      0.03145499
+3         0.00463540      0.00884820      0.02155177
+4         0.00813610      0.01871830     -0.00306476
+5         0.00782147     -0.03060248      0.02959932
+6        -0.00745686     -0.01227302     -0.02534009
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.05241984      0.00810494     -0.00412926
+2        -0.05468901     -0.00831196      0.02339022
+3        -0.00831914     -0.00135608      0.00096430
+4        -0.01990143     -0.00002698     -0.00518761
+5         0.01521697     -0.00144729     -0.00837509
+6         0.01527278      0.00303737     -0.00666257
+Coupling between state 1 and state 3 (computed):
+1         0.22959113     -0.03984508      0.02167107
+2        -0.00375945      0.00866023     -0.00394240
+3        -0.06918494      0.01171647      0.00686275
+4        -0.14520756      0.03737822     -0.01948527
+5         0.03129467     -0.00296913     -0.00545274
+6        -0.04273384     -0.01494072      0.00034659
+Coupling between state 2 and state 3 (computed):
+1        -0.59944457     -0.04356341      0.26170117
+2         0.13362755     -0.10929394     -0.27091895
+3         0.11470749      0.00771723      0.02203016
+4         0.35462997      0.08945951     -0.05443099
+5         0.14332943      0.04889649      0.02168076
+6        -0.14684986      0.00678412      0.01993785
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 17:57:51 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 8, TIME 4.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 17:57:52 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 17:57:52 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:00:33 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.24506768
+  State 2: -78.10689907
+  State 3: -78.04950926
+
+Gradient of state 3 (a.u.):
+1        -0.01874648     -0.00243593     -0.05592528
+2         0.00440368      0.02827957      0.02021210
+3         0.00502995      0.01485030      0.02726321
+4         0.00571671      0.01286221     -0.00135599
+5         0.01001836     -0.04117815      0.03524729
+6        -0.00642221     -0.01237800     -0.02544133
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.06690696     -0.02113938     -0.01191810
+2        -0.05758981     -0.00754670      0.03752282
+3        -0.01502836     -0.00072669      0.00379072
+4        -0.02487913      0.02665568     -0.01339620
+5         0.01765508     -0.00010142     -0.00952435
+6         0.01293526      0.00285852     -0.00647490
+Coupling between state 1 and state 3 (computed):
+1         0.22271548     -0.07025293      0.02901196
+2        -0.01108247      0.00402081     -0.00026619
+3        -0.07230051      0.00907689      0.00851375
+4        -0.13461105      0.07055431     -0.03202386
+5         0.03898903      0.00129011     -0.00678692
+6        -0.04371048     -0.01468919      0.00155126
+Coupling between state 2 and state 3 (computed):
+1        -0.74714590     -0.07339914      0.42424653
+2         0.17658110     -0.14974613     -0.43724471
+3         0.16689673     -0.01423446      0.03512369
+4         0.40406304      0.17161811     -0.08125319
+5         0.15450845      0.05098710      0.03725691
+6        -0.15490342      0.01477451      0.02187076
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:00:34 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 9, TIME 4.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:00:40 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:00:40 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:03:34 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.22934000
+  State 2: -78.09570255
+  State 3: -78.05071582
+
+Gradient of state 3 (a.u.):
+1        -0.01404103     -0.00016456     -0.05733326
+2         0.00137049      0.03120088      0.01230433
+3         0.00472471      0.01915664      0.03141633
+4         0.00265469      0.00731857      0.00021129
+5         0.01035492     -0.04662257      0.03778543
+6        -0.00506379     -0.01088896     -0.02438412
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.08246041     -0.04751765     -0.02891571
+2        -0.06167538     -0.00591456      0.05989667
+3        -0.02334861      0.00067480      0.00620657
+4        -0.02969751      0.04902888     -0.02016646
+5         0.02365575      0.00189713     -0.01087554
+6         0.00860534      0.00183140     -0.00614553
+Coupling between state 1 and state 3 (computed):
+1         0.21299742     -0.09431603      0.03316498
+2        -0.01868159      0.00007804      0.00328190
+3        -0.07696511      0.00688532      0.00946663
+4        -0.11967903      0.09594854     -0.04103320
+5         0.05013969      0.00645715     -0.00826027
+6        -0.04781138     -0.01505302      0.00337996
+Coupling between state 2 and state 3 (computed):
+1        -0.93597245     -0.09911661      0.66016119
+2         0.24478708     -0.22399077     -0.69333458
+3         0.23593244     -0.06044651      0.06722375
+4         0.46319578      0.30321058     -0.11975511
+5         0.15599516      0.05158318      0.06384377
+6        -0.16393802      0.02876014      0.02186097
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:03:34 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 10, TIME 5.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:03:34 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:03:35 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:06:43 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.21588812
+  State 2: -78.08716447
+  State 3: -78.05202321
+
+Gradient of state 3 (a.u.):
+1        -0.00728166      0.00207312     -0.05880101
+2        -0.00042706      0.02762631      0.00930148
+3         0.00343790      0.02223187      0.03377722
+4        -0.00081805      0.00186106      0.00168102
+5         0.00871412     -0.04578065      0.03620893
+6        -0.00362524     -0.00801171     -0.02216764
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.10293618     -0.06479292     -0.06184686
+2        -0.06790086     -0.00364271      0.09612914
+3        -0.03450645      0.00306493      0.00770005
+4        -0.03617454      0.06081439     -0.02383837
+5         0.03381761      0.00490243     -0.01260598
+6         0.00182807     -0.00034612     -0.00553797
+Coupling between state 1 and state 3 (computed):
+1         0.20071809     -0.10279784      0.03129686
+2        -0.02468466     -0.00381776      0.00697870
+3        -0.08148158      0.00532396      0.00939088
+4        -0.10280389      0.10493863     -0.04383407
+5         0.06200942      0.01222681     -0.00953003
+6        -0.05375738     -0.01587380      0.00569765
+Coupling between state 2 and state 3 (computed):
+1        -1.12916333     -0.10412631      0.97568818
+2         0.33619733     -0.34629187     -1.06192930
+3         0.31408240     -0.14984297      0.13300439
+4         0.51409839      0.50400019     -0.17240373
+5         0.12672490      0.04349040      0.10795971
+6        -0.16193969      0.05277056      0.01768075
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:06:43 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 11, TIME 5.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:06:44 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:06:44 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:10:16 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.20520586
+  State 2: -78.08185592
+  State 3: -78.05334852
+
+Gradient of state 3 (a.u.):
+1         0.00095844      0.00371148     -0.06086876
+2        -0.00095773      0.01859662      0.01202710
+3         0.00122624      0.02458532      0.03406661
+4        -0.00432066     -0.00388545      0.00311256
+5         0.00549911     -0.03904118      0.03046341
+6        -0.00240540     -0.00396680     -0.01880093
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.12928480     -0.06937323     -0.12195156
+2        -0.07629421     -0.00072551      0.15694041
+3        -0.04894374      0.00667971      0.00766361
+4        -0.04458138      0.05780314     -0.02345734
+5         0.04848309      0.00953235     -0.01476528
+6        -0.00794856     -0.00391646     -0.00442983
+Coupling between state 1 and state 3 (computed):
+1         0.18328939     -0.09759019      0.02803965
+2        -0.02638337     -0.00839271      0.00702131
+3        -0.08334097      0.00395195      0.00855391
+4        -0.08488255      0.10068471     -0.04180407
+5         0.07127464      0.01801183     -0.01008822
+6        -0.05995715     -0.01666560      0.00827742
+Coupling between state 2 and state 3 (computed):
+1        -1.19557174     -0.03513274      1.23399354
+2         0.41679396     -0.50338423     -1.42506815
+3         0.36264630     -0.28630588      0.23811455
+4         0.50489717      0.72238821     -0.22040003
+5         0.03792110      0.01706158      0.16760407
+6        -0.12668678      0.08537306      0.00575601
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:10:16 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 12, TIME 6.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:10:18 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:10:18 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:13:23 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.19718242
+  State 2: -78.07963935
+  State 3: -78.05430216
+
+Gradient of state 3 (a.u.):
+1         0.00825002      0.00398724     -0.06150445
+2         0.00005007      0.00575950      0.01774329
+3        -0.00118147      0.02618379      0.03230908
+4        -0.00690336     -0.00892897      0.00417051
+5         0.00161077     -0.02810358      0.02163493
+6        -0.00182605      0.00110201     -0.01435336
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.15399238     -0.05678000     -0.21889580
+2        -0.08423004      0.00213033      0.25064164
+3        -0.06385014      0.01149010      0.00571147
+4        -0.05194499      0.03556855     -0.01781759
+5         0.06681897      0.01626598     -0.01688124
+6        -0.02078617     -0.00867496     -0.00275848
+Coupling between state 1 and state 3 (computed):
+1         0.15890908     -0.08556649      0.03619916
+2        -0.02247128     -0.01465338     -0.00699162
+3        -0.08073965      0.00213731      0.00779127
+4        -0.06657929      0.09180357     -0.03795319
+5         0.07585760      0.02311275     -0.00975946
+6        -0.06497647     -0.01683376      0.01071384
+Coupling between state 2 and state 3 (computed):
+1        -0.98392130      0.16986814      1.08431871
+2         0.42133665     -0.61462449     -1.41716619
+3         0.32858999     -0.41253078      0.34232457
+4         0.38383494      0.77240695     -0.21427705
+5        -0.09945427     -0.02469415      0.21790481
+6        -0.05038601      0.10957433     -0.01310485
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:13:23 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 13, TIME 6.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:13:24 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:13:24 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:16:37 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.19116322
+  State 2: -78.07952811
+  State 3: -78.05464402
+
+Gradient of state 3 (a.u.):
+1         0.01239440      0.00306904     -0.05675876
+2         0.00291787     -0.00962929      0.02073486
+3        -0.00294236      0.02600251      0.02920137
+4        -0.00792495     -0.01119653      0.00433978
+5        -0.00246375     -0.01535124      0.01159094
+6        -0.00198119      0.00710551     -0.00910819
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.16196769     -0.03161991     -0.33213724
+2        -0.08703905      0.00265548      0.35724119
+3        -0.07346131      0.01594282      0.00290295
+4        -0.05240821      0.00193535     -0.00904258
+5         0.08688695      0.02467998     -0.01812638
+6        -0.03594607     -0.01359371     -0.00083794
+Coupling between state 1 and state 3 (computed):
+1         0.13323418     -0.07527408      0.06477820
+2        -0.01564410     -0.02286244     -0.04090037
+3        -0.07535825     -0.00034699      0.00804310
+4        -0.05037636      0.08756193     -0.03540258
+5         0.07626311      0.02717643     -0.00910612
+6        -0.06811858     -0.01625486      0.01258777
+Coupling between state 2 and state 3 (computed):
+1        -0.61892880      0.45964160      0.44246478
+2         0.35239026     -0.62169423     -0.89773387
+3         0.23760213     -0.45918329      0.39164781
+4         0.21102869      0.56872412     -0.14306339
+5        -0.20678139     -0.05735704      0.23653516
+6         0.02468911      0.10986884     -0.02985050
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:16:37 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 14, TIME 7.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:16:40 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:16:40 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:20:57 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.16327006
+  State 2: -78.05925485
+  State 3: -78.04872863
+
+Gradient of state 3 (a.u.):
+1         0.00801368     -0.03171256     -0.02116504
+2         0.00130608     -0.00791967      0.01439912
+3        -0.00262740      0.03567777      0.01281574
+4        -0.00286563     -0.00628929      0.00184814
+5         0.00007880     -0.00068411     -0.00528268
+6        -0.00390553      0.01092786     -0.00261528
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.21361144      0.05620825     -0.31784210
+2        -0.10248247     -0.05543778      0.29517138
+3        -0.12829469      0.00412894      0.02841472
+4        -0.05372582     -0.02899106     -0.00498320
+5         0.18229981      0.05306150     -0.01114317
+6        -0.11140826     -0.02896985      0.01038237
+Coupling between state 1 and state 3 (computed):
+1         0.00864975     -0.09442809      0.23627899
+2         0.02972264     -0.01369307     -0.24409449
+3        -0.02349670     -0.02203355      0.02016439
+4         0.01623550      0.12994032     -0.03306262
+5        -0.01453874     -0.00095463      0.00940652
+6        -0.01657245      0.00116903      0.01130720
+Coupling between state 2 and state 3 (computed):
+1        -1.65483442     -1.32145170      3.46330232
+2         0.44081473      0.04047360     -2.85987098
+3         0.65768797      0.16190878     -0.22242302
+4         0.49596558      1.07313946     -0.38948785
+5         0.13567094      0.03135612     -0.03196937
+6        -0.07530480      0.01457373      0.04044889
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:20:57 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 15, TIME 7.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:20:58 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:20:58 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:25:26 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.15864299
+  State 2: -78.06092777
+  State 3: -78.04801997
+
+Gradient of state 3 (a.u.):
+1         0.00996209     -0.02295158     -0.02510982
+2         0.00616753     -0.02384028      0.02468643
+3        -0.00352937      0.02930658      0.00821765
+4        -0.00362878     -0.00999826      0.00278033
+5        -0.00437907      0.01012976     -0.01310688
+6        -0.00459240      0.01735378      0.00253229
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.18207061      0.02018884     -0.20017257
+2        -0.09857687     -0.07024934      0.18174996
+3        -0.12544032     -0.00618505      0.03577269
+4        -0.02989952      0.02557111     -0.01827942
+5         0.19062463      0.05831718     -0.01073128
+6        -0.11877852     -0.02764273      0.01166063
+Coupling between state 1 and state 3 (computed):
+1         0.03976964     -0.06359625      0.14790440
+2         0.01783965     -0.01531584     -0.16424636
+3        -0.03451180     -0.01700213      0.02009189
+4         0.00347087      0.09435838     -0.02414360
+5        -0.00766638      0.00284473      0.00842097
+6        -0.01890199     -0.00128889      0.01197271
+Coupling between state 2 and state 3 (computed):
+1        -0.82574309     -0.78245589      1.54356000
+2         0.15664100      0.22960521     -1.03597527
+3         0.35405315      0.27495196     -0.30616399
+4         0.21631257      0.25303614     -0.12956486
+5         0.16168333      0.05440441     -0.10481392
+6        -0.06294695     -0.02954182      0.03295805
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:25:26 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 16, TIME 8.0000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:25:27 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:25:27 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  successfuly at Mon Nov  9 18:29:47 EST 2026
+---------------------------------------------------------------------------
+State energies (a.u.):
+  State 1: -78.15314023
+  State 2: -78.06083508
+  State 3: -78.04666844
+
+Gradient of state 3 (a.u.):
+1         0.00956803     -0.01563086     -0.01704844
+2         0.01075358     -0.03644003      0.02495801
+3        -0.00389625      0.02006759      0.00226325
+4        -0.00311016     -0.00927689      0.00245897
+5        -0.00785801      0.01876358     -0.01950676
+6        -0.00545719      0.02251662      0.00687496
+
+Nonadiabatic couplings (a.u.):
+Coupling between state 1 and state 2 (computed):
+1         0.16974370      0.01373942     -0.13918296
+2        -0.09674368     -0.08376359      0.11658552
+3        -0.12674707     -0.01468671      0.04276914
+4        -0.01710647      0.04922409     -0.02287757
+5         0.19492296      0.06302374     -0.00972307
+6        -0.12406943     -0.02753696      0.01242893
+Coupling between state 1 and state 3 (computed):
+1         0.04864260     -0.04459719      0.09774965
+2         0.01322839     -0.01736551     -0.12170421
+3        -0.03701601     -0.01395299      0.02099089
+4        -0.00019289      0.07311768     -0.01849825
+5        -0.00638008      0.00471129      0.00895808
+6        -0.01828200     -0.00191328      0.01250384
+Coupling between state 2 and state 3 (computed):
+1        -0.55989416     -0.54506770      0.83443871
+2         0.08913353      0.23676468     -0.40385900
+3         0.25376450      0.27161517     -0.30007271
+4         0.12536041      0.01108203     -0.04842536
+5         0.15475394      0.06135782     -0.10972123
+6        -0.06311823     -0.03575202      0.02763960
+
+Finished run-qchem-eom.pl successfuly at Mon Nov  9 18:29:47 EST 2026
+---------------------------------------------------------------------------
+ write_pair: In the next step, Nad coupling for the following pairs will
+ be computed (1=ground state):
+   2   1
+   3   1
+   3   2
+
+       =======================================================================
+            FINISHING STEP 17, TIME 8.5000 fs on SURFACE 3            
+       =======================================================================
+
+
+Starting normal electronic structure calculation
+
+---------------------------------------------------------------------------
+Starting run-qchem-eom.pl at Mon Nov  9 18:29:48 EST 2026
+run-qchem-eom.pl: nac_mode = nx; 2 Q-Chem job(s), target state(s) 3,1; couplings wanted: 1-2 1-3 2-3
+---------------------------------------------------------------------------
+Starting qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  at Mon Nov  9 18:29:48 EST 2026
+Finished qchem -save -nt 4 qchem.inp qchem.out nxqc_8044a8b0f78a  with ERROR at Mon Nov  9 18:30:41 EST 2026
+---------------------------------------------------------------------------
+run-qchem-eom.pl: Q-Chem returned a non-zero exit code (Unknown error 256). See TEMP/qchem.out and qchem.status.
+Finished run-qchem-eom.pl with ERROR at Mon Nov  9 18:30:42 EST 2026
+---------------------------------------------------------------------------
+
+moldyn.pl:   ::ERROR::   step = 18 time = 9 fs 
+Trying to save TEMP directory to ../DEBUG 
+See also error messages in DEBUG/runnx.error 

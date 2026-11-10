@@ -1,0 +1,3 @@
+# Q-Chem interface settings (keyword = value). nac_mode is not set,
+# so the interface computes the couplings NewtonX asks for (all pairs by default).
+nt = 4

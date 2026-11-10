@@ -1,0 +1,7 @@
+STOP 666
+Total energy changed more than Etot_jump in 1 timestep.
+Options to solve (or avoid) this kind of problem are:
+1 - reduce timestep dt;
+2 - increase Etot_jump;
+3 - check whether the electronic structure method and level
+are adequate to compute the energies for the current geometry. 

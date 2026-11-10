@@ -1,0 +1,3 @@
+# Q-Chem interface settings (keyword = value)
+nac_mode = active
+nt = 4

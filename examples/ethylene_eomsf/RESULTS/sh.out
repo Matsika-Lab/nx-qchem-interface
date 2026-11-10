@@ -1,0 +1,115 @@
+ -----------------------
+   integrator =       5
+   phase      =       1
+   nohop      =       0
+   forcesurf  =       1
+   getphase   =       1
+   nrelax     =       0
+   vdoth      =     0.0
+   tully      =       1
+   ms         =      20
+   mom        =       1
+   seed       =20261109
+   adjmom     =    0.00
+   probmin    =  0.0000
+   popdev     =   0.050
+   decohmod   =       1
+   decay      =  0.1000
+   decovlp    = -1.0000
+   thrwp      =  0.1000D-02
+   iatau      =       1
+   run_complex=       0
+ -----------------------
+|v.h|=    -0.000056    0.000016   -0.000530
+Integration of the TDSH for the electrons
+Integrator = 5          Hopping is allowed    
+  substep     step  surf      Total pop
+        0        0     3    1.000000000
+Population:     1    0.000000000
+Population:     2    0.000000000
+Population:     3    1.000000000
+|v.h|=    -0.000055    0.000019   -0.000514
+        1        1     3    1.000000000
+Population:     1    0.000000000
+Population:     2    0.000000277
+Population:     3    0.999999723
+|v.h|=    -0.000030    0.000087   -0.000153
+       21        2     3    1.000000000
+Population:     1    0.000000066
+Population:     2    0.000014163
+Population:     3    0.999985771
+|v.h|=    -0.000005    0.000162    0.000017
+       41        3     3    1.000000000
+Population:     1    0.000000265
+Population:     2    0.000002821
+Population:     3    0.999996914
+|v.h|=     0.000017    0.000239   -0.000005
+       61        4     3    1.000000000
+Population:     1    0.000000630
+Population:     2    0.000000972
+Population:     3    0.999998398
+|v.h|=     0.000041    0.000267   -0.000265
+       81        5     3    1.000000000
+Population:     1    0.000000855
+Population:     2    0.000002271
+Population:     3    0.999996874
+|v.h|=     0.000072    0.000206   -0.000580
+      101        6     3    1.000000000
+Population:     1    0.000000533
+Population:     2    0.000024209
+Population:     3    0.999975258
+|v.h|=     0.000110    0.000191   -0.000872
+      121        7     3    1.000000000
+Population:     1    0.000000527
+Population:     2    0.000064925
+Population:     3    0.999934547
+|v.h|=     0.000129    0.000198   -0.001266
+      141        8     3    1.000000000
+Population:     1    0.000000713
+Population:     2    0.000162904
+Population:     3    0.999836384
+|v.h|=     0.000044    0.000082   -0.001807
+      161        9     3    1.000000000
+Population:     1    0.000000164
+Population:     2    0.000474716
+Population:     3    0.999525120
+|v.h|=    -0.000142   -0.000200   -0.002542
+      181       10     3    1.000000000
+Population:     1    0.000001051
+Population:     2    0.001342000
+Population:     3    0.998656949
+|v.h|=    -0.000315   -0.000445   -0.003592
+      201       11     3    1.000000000
+Population:     1    0.000005085
+Population:     2    0.003758508
+Population:     3    0.996236407
+|v.h|=    -0.000427   -0.000575   -0.004940
+      221       12     3    1.000000000
+Population:     1    0.000010067
+Population:     2    0.010303035
+Population:     3    0.989686898
+|v.h|=    -0.000461   -0.000600   -0.006006
+      241       13     3    1.000000000
+Population:     1    0.000011881
+Population:     2    0.024711435
+Population:     3    0.975276684
+|v.h|=    -0.000417   -0.000569   -0.005674
+      261       14     3    1.000000000
+Population:     1    0.000011519
+Population:     2    0.044739019
+Population:     3    0.955249461
+|v.h|=    -0.000356   -0.000539   -0.004205
+      281       15     3    1.000000000
+Population:     1    0.000011449
+Population:     2    0.057513347
+Population:     3    0.942475204
+|v.h|=    -0.000294   -0.000630   -0.005456
+      301       16     3    1.000000000
+Population:     1    0.000022896
+Population:     2    0.067931276
+Population:     3    0.932045828
+|v.h|=    -0.000604   -0.000444   -0.001077
+      321       17     3    1.000000000
+Population:     1    0.000014493
+Population:     2    0.077123634
+Population:     3    0.922861873

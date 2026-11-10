@@ -1,0 +1,10 @@
+# Methane cation, EOM-IP-CCSD/cc-pVDZ, 3 states, default thresholds, 4 threads.
+# job                          target  SCF guess        wall (s)  cpu (s)
+ip.out.gz                      [1,3]   default (SAD)    15.79     35.64
+ipread.out.gz                  [1,3]   READ             11.24     27.51
+multi.out.gz, job 1            [1,3]   default (SAD)    15.90     35.97
+multi.out.gz, job 2            [1,1]   READ (job 1)     13.23     29.11
+force.out.gz (JOBTYPE FORCE)   [1,3]   default (SAD)    24.20     20.24
+# force.out.gz: wall time above cpu time means the job waited on the shared node;
+# compare cpu time (20.2 s against 35.6 s for ip.out.gz). The gradient-only timing
+# in the benchmarks page comes from the methaniminium jobs in ../wall_times.txt.

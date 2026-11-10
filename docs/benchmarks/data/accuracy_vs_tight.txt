@@ -1,0 +1,7 @@
+default.out: max|dE| 11.97 uEh, max|dG| 2.1e-04 au, max||d|-|d_ref|| 5.6e-03 au, min|cos| 0.999873
+tight_ccmp.out: max|dE| 0.00 uEh, max|dG| 0.0e+00 au, max||d|-|d_ref|| 1.0e-08 au, min|cos| 1.000000
+tight_xm.out: max|dE| 0.00 uEh, max|dG| 0.0e+00 au, max||d|-|d_ref|| 0.0e+00 au, min|cos| 1.000000
+sp_fast.out: max|dE| 10.88 uEh, max|dG| 2.0e-04 au, max||d|-|d_ref|| 5.5e-03 au, min|cos| 0.999874
+force_tight.out: max|dE| 0.00 uEh, max|dG| 0.0e+00 au
+force_tight_cd.out: max|dE| 15.02 uEh, max|dG| 2.1e-05 au
+force_tight_ri.out: max|dE| 278.93 uEh, max|dG| 1.5e-04 au

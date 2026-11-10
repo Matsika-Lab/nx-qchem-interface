@@ -1,0 +1,4 @@
+Error in Q-Chem run part 1
+Error in Q-Chem run part 2
+Error in the Q-Chem run
+run-qchem-eom.pl: Q-Chem failed

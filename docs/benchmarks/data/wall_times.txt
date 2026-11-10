@@ -1,0 +1,12 @@
+default 25.713461501 1
+tight 32.582572206 1
+tight_cd 6.926805744 0
+tight_mp .065619751 0
+tight_cd_mp .053081889 0
+tight_ccmp 34.326803392 1 
+tight_xm 64.264601175 1 
+tight_ri 7.447078826 0  Key 'i5_vvvv_float' is not known.
+sp_fast 23.966158422 1 
+force_tight 20.704006235 1 
+force_tight_cd 23.637137360 1 
+force_tight_ri 22.746704035 1 

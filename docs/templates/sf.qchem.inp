@@ -1,0 +1,21 @@
+$molecule
+0 3
+C     -0.02826917     0.00991022     0.68296438
+C      0.03089974    -0.02204265    -0.66539842
+H      0.16454917     0.93027445     1.13534375
+H      0.01047720    -0.92482819     1.13693412
+H     -0.18021295     1.04438241    -1.19179366
+H     -0.02613859    -0.90537288    -1.28963585
+$end
+
+$rem
+METHOD            EOM-CCSD
+SF_STATES         [3]
+BASIS             cc-pVDZ
+CALC_NAC          2
+SYM_IGNORE        TRUE
+SCF_CONVERGENCE           9
+CC_CONVERGENCE            8
+! CCSD on the triplet (UHF) reference stalls near 1e-9 at twisted geometries; 1e-8 converges
+EOM_DAVIDSON_CONVERGENCE  9
+$end
