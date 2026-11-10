@@ -1,0 +1,18 @@
+$molecule
+1 1
+C     -0.00268860     0.01130480     0.00181342
+H      1.10123809    -0.15354285    -0.00719731
+H     -0.62872691     0.88101230    -0.00719731
+H     -0.44049586    -0.86207089    -0.00719731
+$end
+
+$rem
+METHOD            EOM-CCSD
+EA_STATES         [3]
+BASIS             cc-pVDZ
+CALC_NAC          2
+SYM_IGNORE        TRUE
+SCF_CONVERGENCE           9
+CC_CONVERGENCE            9
+EOM_DAVIDSON_CONVERGENCE  9
+$end

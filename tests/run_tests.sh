@@ -224,6 +224,14 @@ for pair in ip:methane_cation_eomip_full ea:methyl_radical_eomea ee:methaniminiu
     && ok "docs/templates/$t.qchem.inp matches examples/$ex" || bad "docs/templates/$t.qchem.inp differs from examples/$ex/JOB_NAD/qchem.inp"
 done
 
+# 1b. A nearly vanishing coupling does not replace a good phase reference
+#     (methyl radical EOM-EA, 11.0-11.75 fs: d23 drops to ~1e-5 a.u. at 11.5 fs)
+d=$(new_traj methyl_ea_weak ea_weak)
+if replay $d methyl_ea_weak; then
+  ! grep -q "pair 2 (states 2-3)" $d/../snap/11.7500.log && grep -q "^pair 2 11.25" $d/../INFO_RESTART/nac_phase_ref \
+    && ok "weak coupling (|d23| ~ 1e-5): not aligned, no warning; the 11.25 fs reference is kept" || bad "weak coupling: $(grep -h 'pair 2' $d/../snap/11.7500.log; grep '^pair 2' $d/../INFO_RESTART/nac_phase_ref)"
+else bad "methyl EA replay stopped: $(tail -1 $d/../snap/*.log | tail -1)"; fi
+
 # 12. Q-Chem frequencies to NewtonX initcond input (tools/qchem_freq_to_nx.py)
 o=$WORK/freq_ch4; python3 $HERE/../tools/qchem_freq_to_nx.py $HERE/data/freq_ch4/ch4_freq.out $o > /dev/null 2>&1
 cmp -s $o/molden.freq $HERE/data/freq_ch4/expected.molden.freq && cmp -s $o/geom $HERE/data/freq_ch4/expected.geom \

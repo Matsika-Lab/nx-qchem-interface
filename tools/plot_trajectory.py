@@ -180,7 +180,8 @@ def main():
     pairs = [(i, j) for i in range(2, nstat + 1) for j in range(1, i)]
     V = np.array([np.array(v, dtype=float) if v is not None and len(v) == len(pairs) else np.full(len(pairs), np.nan) for v in vh])
     for p, (i, j) in enumerate(pairs):
-        y = np.where(V[:, p] > 0, V[:, p], np.nan)
+        vabs = np.abs(V[:, p])  # sh.out prints v.h with its sign
+        y = np.where(vabs > 0, vabs, np.nan)
         ax.plot(tp, y, color=PAIR_COLORS[p], lw=1.2, label=f"States {j}–{i}")
     ax.set_yscale("log")
     ax.set_ylabel("|v · d| (a.u.)", fontsize=9)

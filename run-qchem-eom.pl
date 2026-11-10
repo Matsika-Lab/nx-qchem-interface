@@ -61,6 +61,9 @@ my %allowed_nac_mode = ( nx => 1, full => 1, carry => 1, active => 1 );
 
 my ( $mld, $mdle, $BASEDIR, $DEBUG, $JAD, $JND, $ctd, $fpar );
 my ( $qchem_template, $qchem_inp, $qchem_out, $phase_ref_file, $save_name );
+# Couplings with a norm below this (a.u.) are too weak to define a direction: they are
+# not used as phase references and are not aligned to one.
+my $weak_nac = 1e-3;
 my ( $nat, $istep, $nstat, $nstatdyn, $ndamp, $kt, $dt, $t, $tmax, $nintc );
 my ( $nxrestart, $thres, $killstat, $timekill, $prog, $lvprt, $etot_jump, $etot_drift );
 my ( @symb, @zn, @x, @y, @z, @Mass );
@@ -915,7 +918,7 @@ sub align_unreferenced_pairs {
         my $cur = current_vector($k);
         my ( undef, undef, $ncur ) = pair_dot( $cur, $cur );
         my ( undef, $nold, undef ) = pair_dot( $old[$k], $old[$k] );
-        next if $ncur <= $eps;
+        next if $ncur <= $weak_nac;      # nearly vanishing: no reliable direction, and its sign does not matter
         next if $nold * $ncur > $eps;    # escalar has a t-dt reference (same test as escalar)
 
         if ( !exists $ref->{$k} ) {
@@ -950,7 +953,9 @@ sub update_phase_ref {
     for my $k ( 0 .. $ncoup - 1 ) {
         next unless $computed_pair{$k};
         my ( undef, $n, undef ) = pair_dot( $cur[$k], $cur[$k] );
-        $ref->{$k} = { t => $t, vec => $cur[$k] } if $n > 1e-6;
+        # A nearly vanishing coupling has no reliable direction (escalar ignores it as a
+        # t-dt reference too), so it does not replace an older, well-defined reference.
+        $ref->{$k} = { t => $t, vec => $cur[$k] } if $n > $weak_nac;
         # Keep @h in sync with what NewtonX uses (for printing)
         for my $ia ( 0 .. $nat - 1 ) { ( $hx[$k][$ia], $hy[$k][$ia], $hz[$k][$ia] ) = @{ $cur[$k][$ia] }; }
     }
