@@ -116,7 +116,7 @@ The README credits section has these bullets:
   - **Decisions:** "the authors made the design decisions".
   - **Commits:** "the commits of this revision carry `Co-Authored-By: Claude` lines".
 - **Citation:** link to `CITATION.cff`, and ask users to also cite NewtonX and the electronic-structure program.
-- **License:** "GPL-3.0-or-later, see [`LICENSE`](LICENSE)."
+- **License:** "GPL-3.0-or-later, see `LICENSE`", with `LICENSE` linked to the license file.
 
 Every script has `# SPDX-License-Identifier: GPL-3.0-or-later` on line 2.
 
