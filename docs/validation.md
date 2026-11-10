@@ -152,7 +152,7 @@ With 3 states, `carry` and `active` skip one pair, the one between the two inact
 
 **Setup.**
 
-- **Versions.** The example trajectories, run with development versions of interface 2.0 (November 2026), NewtonX 2.4 (build 06) and Q-Chem 5.4.1, cc-pVDZ, tight thresholds.
+- **Versions.** Interface 2.0 development, commits `28fce79`–`830c9bf` (November 2026): each example ran with the script as it stood between the interface rework and the commit that added its results. NewtonX 2.4 (build 06), Q-Chem 5.4.1, cc-pVDZ, tight thresholds.
 - **Conditions.** 4 cores per run (`nt = 4`), node002, with other jobs sharing the node; node load not recorded.
 - **Measure.** For each step, the sum of `Total job time: … s(wall)` over the Q-Chem jobs in its archived output (`INFO_RESTART/qchem_outputs/<time>.out.gz`, without `after_hop` runs); the table gives the median over the steps.
 
