@@ -18,7 +18,7 @@ rm -rf RESULTS INFO_RESTART plots   # keep only the inputs
 nohup $NX/moldyn.pl > moldyn.log 2>&1 &
 ```
 
-The last line starts a complete 50 fs methane-cation trajectory in the background: 200 steps of about 42 s each on 4 cores, so 2–3 hours. To set up your own system, follow [Your first trajectory](docs/first-trajectory.md).
+The last line starts a complete 50 fs methane-cation trajectory in the background: 200 steps of about 60 s each on 4 cores, so 3–4 hours. To set up your own system, follow [Your first trajectory](docs/first-trajectory.md).
 
 ## Where to go next
 

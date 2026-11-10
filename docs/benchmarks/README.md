@@ -15,6 +15,7 @@ What makes a step cheaper, and what each option costs in accuracy. Raw inputs, o
 | Tight thresholds (10⁻⁹) | **Recommended** for production. Cost +27% per job; removes errors of about 10 μEh in energies and 6 × 10⁻³ a.u. in couplings. |
 | Cholesky (`CHOLESKY_TOL`) or RI (`AUX_BASIS`) integrals | **Not usable with couplings** in Q-Chem 5.4.1 (crash). With gradient-only jobs they run, but give no gain for small molecules, and RI costs accuracy. |
 | Single precision (`CC_SINGLE_PREC`, `EOM_SINGLE_PREC`) | **No gain.** Mixed-precision EOM is not implemented; mixed CCSD is no faster; full single precision is 7% faster than default double precision at the same accuracy as default thresholds. |
+| Coupling modes `carry` / `active` | **Half the cost** of `full` with 3 states, and the same trajectory for the methane cation; see [Coupling modes](#coupling-modes). |
 | `CC_BACKEND XM` | **Avoid** for small and medium molecules: twice as slow. |
 
 ## Q-Chem options for one coupling job
@@ -52,6 +53,22 @@ Methane cation, EOM-IP-CCSD/cc-pVDZ, 3 states, default thresholds.
 | Second job of a two-job input (same geometry, orbitals read) | 13.2 s, against 15.9 s for the first. It targets a different state (1 instead of 3), so it is not directly comparable with the 11.2 s above. |
 | Gradient of each state from jobs targeting different states | identical (difference 0.0) |
 | `Full Analytical Gradient` of a gradient-only job against `G_I` of a coupling job | 7.6 × 10⁻⁵ a.u. (convergence noise at default thresholds) |
+
+## Coupling modes
+
+The three [methane-cation examples](../../examples/README.md) start from one initial condition (same geometry, velocities and random seed) and differ only in `nac_mode`. EOM-IP-CCSD/cc-pVDZ, 3 states, tight thresholds, dt 0.25 fs, 50 fs.
+
+| `nac_mode` | Q-Chem jobs per step | Cost per step (median, 4 cores) | Hops | Total energy against `full` | Populations against `full` |
+|---|---|---|---|---|---|
+| `full` | 2 | 60 s | 3 → 2 at 1.75 fs, 2 → 1 at 11.5 fs | reference | reference |
+| `carry` | 1 | 30 s | same | identical (< 0.01 meV) | within 0.006 |
+| `active` | 1 | 29 s | same | identical (< 0.01 meV) | within 0.006 |
+
+![Populations of the three runs, active state and total-energy change](figures/methane_coupling_modes.png)
+
+**Verdict.** `carry` and `active` halve the cost here with no visible change in the trajectory. With 3 states they skip one pair, the one between the two inactive states. With more states they skip more pairs, so the saving grows, and so may the error when two inactive states come close; compare with `full` on a few trajectories before production. The default (`nx`) computes what NewtonX asks for, which with its default settings is every pair, as in `full`.
+
+The three runs shared the node at the same time, so their times compare with each other but not with the single-job timings above.
 
 ## How these were measured
 

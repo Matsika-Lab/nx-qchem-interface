@@ -53,7 +53,7 @@ The [shared keywords](README.md#keywords-shared-by-all-methods) apply too.
 
 ## Run it
 
-The example [`examples/methane_cation_eomip_full`](../../examples/methane_cation_eomip_full) starts on the third CH₄⁺ state, about 42 s per step on 4 cores. Large molecules cost far more: one step of 5-fluorouracil⁺ (12 atoms, cc-pVDZ) takes hours.
+The example [`examples/methane_cation_eomip_full`](../../examples/methane_cation_eomip_full) starts on the third CH₄⁺ state, about 60 s per step on 4 cores (30 s with `nac_mode = carry` or `active`). Large molecules cost far more: one step of 5-fluorouracil⁺ (12 atoms, cc-pVDZ) takes hours.
 
 ## See also
 

@@ -71,7 +71,7 @@ Setting `nac_mode` to `full`, `carry` or `active` overrides NewtonX's list. With
 - **`carry`** computes the pairs with the active state and keeps the last computed value of the others, sign-aligned. Those values are stale until the pair is computed again.
 - **`active`** computes the pairs with the active state only. Couplings between two inactive states are zero, so population cannot flow directly between them. The amplitudes $`c_k`$ of inactive states then drift, and so do the probabilities of later hops into those states. The error is largest when two inactive states are close in energy, and NewtonX's decoherence correction reduces it.
 
-The [methane examples](../examples/README.md) run one initial condition in the three modes.
+The [methane examples](../examples/README.md) run one initial condition in the three modes; see the [comparison](benchmarks/README.md#coupling-modes).
 
 ## Adiabatic and mixed dynamics
 

@@ -14,14 +14,14 @@ The inputs use a fixed `seed`, so a rerun on the same Q-Chem build should follow
 
 | Example | Method | What it shows | Length | Cost per step (4 cores) |
 |---|---|---|---|---|
-| [methane_cation_eomip_full](methane_cation_eomip_full) | EOM-IP | CH₄⁺ relaxation through its Jahn–Teller crossings, all couplings computed (`nac_mode = full`). Inputs only for now; results follow | 50 fs | about 42 s |
-| [methane_cation_eomip_carry](methane_cation_eomip_carry) | EOM-IP | the same trajectory with `nac_mode = carry` | 50 fs | about 29 s |
-| [methane_cation_eomip_active](methane_cation_eomip_active) | EOM-IP | the same trajectory with `nac_mode = active` | 50 fs | about 28 s |
+| [methane_cation_eomip_full](methane_cation_eomip_full) | EOM-IP | CH₄⁺ relaxation through its Jahn–Teller crossings, all couplings computed (`nac_mode = full`) | 50 fs | about 60 s |
+| [methane_cation_eomip_carry](methane_cation_eomip_carry) | EOM-IP | the same trajectory with `nac_mode = carry` | 50 fs | about 30 s |
+| [methane_cation_eomip_active](methane_cation_eomip_active) | EOM-IP | the same trajectory with `nac_mode = active` | 50 fs | about 29 s |
 | [methyl_radical_eomea](methyl_radical_eomea) | EOM-EA | CH₃ radical from the CH₃⁺ reference; C–H dissociation, ending where the reference breaks down | 26 fs | about 65 s |
 | [methaniminium_eomee](methaniminium_eomee) | EOM-EE | S₂ → S₁ decay of CH₂NH₂⁺, ending where EOM-EE breaks down | 14.5 fs | about 85 s |
 | [ethylene_eomsf](ethylene_eomsf) | EOM-SF | ππ* ethylene; a UHF reference that switches solutions, and how `scf_check` detects it | 9 fs | about 145 s |
 
-The three methane runs start from the same geometry, velocities and random seed, so they show what the cheaper [coupling modes](../docs/couplings.md#coupling-modes) change. The carry and active runs give the same trajectory; the full-mode results are still being computed and will be added.
+The three methane runs start from the same geometry, velocities and random seed, so they show what the cheaper [coupling modes](../docs/couplings.md#coupling-modes) change. All three give the same trajectory, at half the cost for `carry` and `active`; see the [comparison](../docs/benchmarks/README.md#coupling-modes).
 
 Costs are medians measured while other jobs shared the node; they are for comparison, not absolute timings.
 

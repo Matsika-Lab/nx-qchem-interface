@@ -21,8 +21,8 @@ The methane cation started on its third state, relaxing through the Jahn–Telle
 *State energies with the active state, populations, |v·d| for each pair, total-energy change, one C–H distance and one H–C–H angle. Dotted lines: hops.*
 
 - **Hops** 3 → 2 at 1.75 fs and 2 → 1 at 11.5 fs, each where the two states come within 0.04 eV of each other. The trajectory then stays on state 1 to 50 fs.
-- **carry and active give the same trajectory** here: the same hops, and total energies equal to within 0.01 meV over 50 fs. The only difference is in the tiny population left on state 3 (5 × 10⁻⁷ against 1 × 10⁻⁶ at the end).
-- **Energy conservation.** Within −12 to +17 meV up to 11 fs, and within 8 meV from 13 fs on. Between them, around the 2 → 1 hop, the total energy drops by about 95 meV over two steps. The hop itself conserves energy exactly (`RESULTS/sh.out`). The loss comes from the steps around it: S₁ and S₂ are 38 meV apart there, so the gradient of the active state changes faster than a 0.25 fs step can follow. A smaller `dt` near such crossings reduces it. The full-mode run has the same drop, so it does not come from the coupling mode.
+- **All three modes give the same trajectory** here: the same hops, total energies equal to within 0.01 meV at every step, and populations that differ by at most 0.006. For this trajectory, the pair that the cheaper modes skip or carry, between the two inactive states, has almost no influence. See the [comparison](../../docs/benchmarks/README.md#coupling-modes).
+- **Energy conservation.** Within −12 to +17 meV up to 11 fs, and within 8 meV from 13 fs on. Between them, around the 2 → 1 hop, the total energy drops by about 95 meV over two steps. The hop itself conserves energy exactly (`RESULTS/sh.out`). The loss comes from the steps around it: S₁ and S₂ are 38 meV apart there, so the gradient of the active state changes faster than a 0.25 fs step can follow. A smaller `dt` near such crossings reduces it. All three modes have the same drop, so it does not come from the coupling mode.
 
 ## Files
 

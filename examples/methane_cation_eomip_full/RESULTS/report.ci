@@ -1,0 +1,13 @@
+ Report points with energy gap smaller than  0.200 eV
+Time (fs) =       1.00   State I =  3   STATE J =  2   |DE| (eV) =  0.113
+Time (fs) =       1.25   State I =  3   STATE J =  2   |DE| (eV) =  0.016
+Time (fs) =       1.50   State I =  3   STATE J =  2   |DE| (eV) =  0.076
+Time (fs) =       1.75   State I =  3   STATE J =  2   |DE| (eV) =  0.140
+Time (fs) =      11.25   State I =  2   STATE J =  1   |DE| (eV) =  0.038
+Time (fs) =      38.50   State I =  3   STATE J =  2   |DE| (eV) =  0.194
+Time (fs) =      38.75   State I =  3   STATE J =  2   |DE| (eV) =  0.160
+Time (fs) =      39.00   State I =  3   STATE J =  2   |DE| (eV) =  0.134
+Time (fs) =      39.25   State I =  3   STATE J =  2   |DE| (eV) =  0.119
+Time (fs) =      39.50   State I =  3   STATE J =  2   |DE| (eV) =  0.125
+Time (fs) =      39.75   State I =  3   STATE J =  2   |DE| (eV) =  0.153
+Time (fs) =      40.00   State I =  3   STATE J =  2   |DE| (eV) =  0.199
