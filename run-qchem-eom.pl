@@ -28,7 +28,7 @@
 #   4. keeps the sign of every coupling vector continuous in time.
 #
 # Settings are read from qchem.par in the trajectory directory (optional).
-# See docs/par-reference.md for the list of keywords.
+# See docs/qchem-par.md for the list of keywords.
 #
 #====================================================================================
 #
