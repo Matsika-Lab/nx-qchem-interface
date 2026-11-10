@@ -12,7 +12,7 @@ Refactored and improved with Claude Code (Anthropic), using the Claude Opus 5.5 
 - Coupling modes `nac_mode = nx | full | carry | active`. The default `nx` follows the pairs NewtonX asks for (`transmomin`).
 - Coupling signs kept continuous across hops: pairs without a value at the previous step are aligned to the last sign-corrected vector in `INFO_RESTART/nac_phase_ref`. Couplings below 10⁻³ a.u. are not used as references.
 - NewtonX 2.6 support. The interface keeps its coupling signs when NewtonX 2.6 runs its own `phase_correction`.
-- Gradient-only steps: time-dependent Baeck-An couplings (`vdoth = 2`), `JOB_AD` templates, and adiabatic steps read from NewtonX's `typeofdyn.out`.
+- Gradient-only steps: time-dependent Baeck-An (TD-BA) couplings (`vdoth = 2`), `JOB_AD` templates, and adiabatic steps read from NewtonX's `typeofdyn.out`.
 - Gradient reuse after a hop, without a new Q-Chem run when the gradient of the new state is known.
 - `run-qchem-eom-initcond.pl` for NewtonX initial conditions and spectra.
 - `scf_check`, which warns when an open-shell reference follows an excited SCF solution, and a warning when an EOM-EE state falls below the CCSD reference.

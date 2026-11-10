@@ -8,7 +8,7 @@ This page shows how to set up surface hopping on electron-attached states with E
 
 > Use EOM-EA-CCSD for dynamics of electron-attached (N + 1 electron) states: radicals made from a closed-shell cation, or anions.
 >
-> **Couplings:** coupling vectors from Q-Chem, or Baeck-An couplings from energies.
+> **Couplings:** coupling vectors from Q-Chem, or time-dependent Baeck-An (TD-BA) couplings from energies.
 
 ## Keywords
 
@@ -25,7 +25,7 @@ The [shared keywords](README.md#keywords-shared-by-all-methods) (`METHOD`, `CALC
 Both kinds work; see [Couplings](../couplings.md#which-methods-allow-which-couplings).
 
 - **Coupling vectors** (`vdoth = 0`): analytic EOM-EA-CCSD couplings from Q-Chem, with `CALC_NAC 2`.
-- **Baeck-An couplings** (`vdoth = 2`): NewtonX computes them from energies, and the interface runs one gradient-only job per step.
+- **TD-BA couplings** (`vdoth = 2`): NewtonX computes them from energies, and the interface runs one gradient-only job per step.
 
 ## Template
 
@@ -64,6 +64,6 @@ About 70 s per step on 4 cores of a shared node for the [methyl-radical example]
 
 ## See also
 
-- [Couplings](../couplings.md): coupling vectors and Baeck-An couplings
+- [Couplings](../couplings.md): coupling vectors and TD-BA couplings
 - [Settings reference](../qchem-par.md): every `qchem.par` key and its default
 - [Other methods](README.md): compare the four EOM flavors

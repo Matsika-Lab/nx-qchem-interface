@@ -20,7 +20,7 @@ Messages from NewtonX itself are quoted from NewtonX 2.4 (build 06).
 | `Initial conditions with Q-Chem need the template` | Initial conditions: `JOB_AD/qchem.inp` is missing or empty. | Put the template in `JOB_AD/qchem.inp`. |
 | `must contain 'SYM_IGNORE TRUE'` | The template does not switch off symmetry, but the interface addresses states as `[1,n]`, which assumes a single irreducible representation. | Add `SYM_IGNORE TRUE` to the `$rem` section of the template. See [Methods](methods/README.md#keywords-shared-by-all-methods). |
 | `must contain 'CALC_NAC 2'` | `JOB_NAD/qchem.inp` has no `CALC_NAC`, but `vdoth = 0` asks Q-Chem for coupling vectors. | Add `CALC_NAC 2` to `JOB_NAD/qchem.inp`, or set `vdoth = 2` for couplings from energies. See [Couplings](couplings.md). |
-| `is not supported with Q-Chem EOM-CC` | `vdoth` in `sh.inp` is neither `0` nor `2`. Q-Chem EOM-CC gives coupling vectors but no wavefunction overlaps. | Use `vdoth = 0` (coupling vectors) or `vdoth = 2` (Baeck-An) in `sh.inp`. |
+| `is not supported with Q-Chem EOM-CC` | `vdoth` in `sh.inp` is neither `0` nor `2`. Q-Chem EOM-CC gives coupling vectors but no wavefunction overlaps. | Use `vdoth = 0` (coupling vectors) or `vdoth = 2` (time-dependent Baeck-An (TD-BA)) in `sh.inp`. |
 | `Unknown keyword` | `qchem.par` contains a key the interface does not know, usually a typo. | Fix that line of `qchem.par`; see the [Settings reference](qchem-par.md#summary). |
 | `WARNING: EOM-SF coupling vectors are not documented` | The template uses `SF_STATES` with `vdoth = 0`. The Q-Chem manual lists EOM-CC couplings for EE, IP and EA only. | See [EOM-SF](methods/eom-sf.md#caveats). Check the couplings before production use, or use `vdoth = 2`. |
 | `is dying now during` | Initial conditions: `run-qchem-eom-initcond.pl` stopped with an error. | Read the reason in `DEBUG/runnx.error`; see [Initial conditions](#errors-during-initial-conditions). |
@@ -50,7 +50,7 @@ Messages from NewtonX itself are quoted from NewtonX 2.4 (build 06).
 | `nac_mode must be nx, full, carry or active` | Wrong value of `nac_mode` in `qchem.par`. | Use one of these four values; see [`nac_mode`](qchem-par.md#nac_mode). |
 | `scf_check must be auto, 0 or 1` | Wrong value of `scf_check` in `qchem.par`. | Use one of these three values; see [`scf_check`](qchem-par.md#scf_check). |
 | `must be a positive integer` | `nt` or `archive_interval` in `qchem.par` is not an integer ≥ 1. | Fix the value; see the [Settings reference](qchem-par.md#summary). |
-| `is not supported: Q-Chem EOM-CC provides coupling vectors` | `vdoth` in `sh.inp` is neither `0` nor `2`. | Use `vdoth = 0` (coupling vectors) or `vdoth = 2` (Baeck-An) in `sh.inp`. |
+| `is not supported: Q-Chem EOM-CC provides coupling vectors` | `vdoth` in `sh.inp` is neither `0` nor `2`. | Use `vdoth = 0` (coupling vectors) or `vdoth = 2` (TD-BA) in `sh.inp`. |
 | `geom has` … `atoms, control.d says` | `nat` in `control.dyn` does not match the number of atoms in `geom`. | Make `nat` equal to the number of atoms. |
 | `Expected` … `Q-Chem job(s) in` | One job of a multi-job step did not run. | Check `DEBUG/TEMP/qchem.out` for the job that stopped. |
 | `did not finish normally` | A Q-Chem job (`CC_STATE_TO_OPT [1,k]`) has no normal end in the output. Common causes are memory and scratch space. | Open `DEBUG/TEMP/qchem.out` for Q-Chem's error. |

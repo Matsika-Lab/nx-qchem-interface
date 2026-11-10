@@ -8,7 +8,7 @@ This page shows how to set up surface hopping on the ionized states of a molecul
 
 > Use EOM-IP-CCSD for dynamics of a cation formed by ionization: the states are the ionized (N − 1 electron) states of the molecule you give Q-Chem.
 >
-> **Couplings:** coupling vectors from Q-Chem, or Baeck-An couplings from energies.
+> **Couplings:** coupling vectors from Q-Chem, or time-dependent Baeck-An (TD-BA) couplings from energies.
 
 ## Keywords
 
@@ -25,7 +25,7 @@ The [shared keywords](README.md#keywords-shared-by-all-methods) (`METHOD`, `CALC
 Both kinds work; see [Couplings](../couplings.md#which-methods-allow-which-couplings).
 
 - **Coupling vectors** (`vdoth = 0`): analytic EOM-IP-CCSD couplings from Q-Chem, with `CALC_NAC 2`.
-- **Baeck-An couplings** (`vdoth = 2`): NewtonX computes them from energies, and the interface runs one gradient-only job per step.
+- **TD-BA couplings** (`vdoth = 2`): NewtonX computes them from energies, and the interface runs one gradient-only job per step.
 
 ## Template
 
@@ -63,6 +63,6 @@ About 60 s per step on 4 cores of a shared node for the methane-cation example w
 
 ## See also
 
-- [Couplings](../couplings.md): coupling vectors and Baeck-An couplings
+- [Couplings](../couplings.md): coupling vectors and TD-BA couplings
 - [Settings reference](../qchem-par.md): every `qchem.par` key and its default
 - [Other methods](README.md): compare the four EOM flavors

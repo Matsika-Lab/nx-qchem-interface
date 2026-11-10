@@ -127,5 +127,5 @@ Run it from the folder that holds `TRAJ1`. The figure goes to `TRAJ1/plots/overv
 ## See also
 
 - [Method tutorials](methods/README.md): templates and pitfalls for each EOM method
-- [Couplings](couplings.md): coupling vectors, Baeck-An couplings and coupling modes
+- [Couplings](couplings.md): coupling vectors, time-dependent Baeck-An (TD-BA) couplings and coupling modes
 - [Troubleshooting](troubleshooting.md): error messages

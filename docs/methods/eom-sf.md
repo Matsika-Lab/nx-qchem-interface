@@ -8,7 +8,7 @@ This page shows how to set up surface hopping with spin-flip EOM-CCSD from a hig
 
 > Use EOM-SF-CCSD for dynamics that reach the ground state, such as decay through a conical intersection with S₀, or bond twisting and breaking. Spin-flip treats the ground and low excited singlets on the same footing.
 >
-> **Couplings:** Baeck-An couplings from energies; coupling vectors from Q-Chem, which Q-Chem computes but does not document for spin-flip.
+> **Couplings:** time-dependent Baeck-An (TD-BA) couplings from energies; coupling vectors from Q-Chem, which Q-Chem computes but does not document for spin-flip.
 
 ## Keywords
 
@@ -25,7 +25,7 @@ The other [shared keywords](README.md#keywords-shared-by-all-methods) (`METHOD`,
 See [Couplings](../couplings.md#which-methods-allow-which-couplings).
 
 - **Coupling vectors** (`vdoth = 0`): computed by Q-Chem 5.4 without a warning, but not documented by Q-Chem for spin-flip. The interface allows them and prints a warning at the start of the trajectory.
-- **Baeck-An couplings** (`vdoth = 2`): need only EOM-SF gradients. The same template works: the interface removes `CALC_NAC` and sets `JOBTYPE FORCE`.
+- **TD-BA couplings** (`vdoth = 2`): need only EOM-SF gradients. The same template works: the interface removes `CALC_NAC` and sets `JOBTYPE FORCE`.
 
 ## Template
 
@@ -70,5 +70,5 @@ About 150 s per step on 4 cores of a shared node for the [ethylene example](../.
 ## See also
 
 - [EOM-EE](eom-ee.md): excited states of a closed-shell molecule
-- [Couplings](../couplings.md): coupling vectors and Baeck-An couplings
+- [Couplings](../couplings.md): coupling vectors and TD-BA couplings
 - [Settings reference](../qchem-par.md): every `qchem.par` key and its default

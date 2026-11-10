@@ -8,10 +8,10 @@ Each EOM-CCSD flavor describes a different set of states. This page compares the
 
 | Method | Reference you give Q-Chem | States in the dynamics | Couplings | Typical use | Tutorial | Template |
 |---|---|---|---|---|---|---|
-| EOM-IP-CCSD | the molecule before ionization (N electrons) | ionized states (N − 1 electrons), lowest first | coupling vectors or Baeck-An | cation dynamics after photoionization | [EOM-IP](eom-ip.md) | [`ip.qchem.inp`](../templates/ip.qchem.inp) |
-| EOM-EA-CCSD | the molecule before electron attachment, often a closed-shell cation | electron-attached states (N + 1 electrons) | coupling vectors or Baeck-An | radicals and anions | [EOM-EA](eom-ea.md) | [`ea.qchem.inp`](../templates/ea.qchem.inp) |
-| EOM-EE-CCSD | the closed-shell ground state | excited states only | coupling vectors or Baeck-An | relaxation among excited states | [EOM-EE](eom-ee.md) | [`ee.qchem.inp`](../templates/ee.qchem.inp) |
-| EOM-SF-CCSD | a high-spin triplet | ground and low singlets, plus the Ms = 0 triplet | Baeck-An; coupling vectors computed but not documented by Q-Chem, and the interface warns | decay to the ground state, bond twisting and breaking | [EOM-SF](eom-sf.md) | [`sf.qchem.inp`](../templates/sf.qchem.inp) |
+| EOM-IP-CCSD | the molecule before ionization (N electrons) | ionized states (N − 1 electrons), lowest first | coupling vectors or time-dependent Baeck-An (TD-BA) | cation dynamics after photoionization | [EOM-IP](eom-ip.md) | [`ip.qchem.inp`](../templates/ip.qchem.inp) |
+| EOM-EA-CCSD | the molecule before electron attachment, often a closed-shell cation | electron-attached states (N + 1 electrons) | coupling vectors or TD-BA | radicals and anions | [EOM-EA](eom-ea.md) | [`ea.qchem.inp`](../templates/ea.qchem.inp) |
+| EOM-EE-CCSD | the closed-shell ground state | excited states only | coupling vectors or TD-BA | relaxation among excited states | [EOM-EE](eom-ee.md) | [`ee.qchem.inp`](../templates/ee.qchem.inp) |
+| EOM-SF-CCSD | a high-spin triplet | ground and low singlets, plus the Ms = 0 triplet | TD-BA; coupling vectors computed but not documented by Q-Chem, and the interface warns | decay to the ground state, bond twisting and breaking | [EOM-SF](eom-sf.md) | [`sf.qchem.inp`](../templates/sf.qchem.inp) |
 
 Every template is the input of a complete [example trajectory](../../examples/README.md).
 

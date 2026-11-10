@@ -6,7 +6,7 @@ Surface hopping needs, at every step, how strongly each pair of electronic state
 
 ## Which methods allow which couplings
 
-| Method | Coupling vectors from Q-Chem (`vdoth = 0`) | Baeck-An couplings from energies (`vdoth = 2`) |
+| Method | Coupling vectors from Q-Chem (`vdoth = 0`) | Time-dependent Baeck-An (TD-BA) couplings from energies (`vdoth = 2`) |
 |---|---|---|
 | EOM-IP-CCSD | yes | yes |
 | EOM-EA-CCSD | yes | yes |
@@ -39,9 +39,9 @@ Q-Chem computes $`\mathbf{h}_{IJ}`$ with Szalay's summed-state method, $`\mathbf
 
 **Cost.** One Q-Chem job gives the couplings between its target state and all other states, plus the gradients of all states. How many jobs run per step is set by [`nac_mode`](qchem-par.md#nac_mode).
 
-## Time-dependent Baeck-An couplings (`vdoth = 2`)
+## TD-BA couplings (`vdoth = 2`)
 
-The Baeck-An approximation estimates the time-derivative coupling from the energy gap alone. NewtonX computes it from the energies of the last few steps:
+The TD-BA approximation estimates the time-derivative coupling from the energy gap alone. NewtonX computes it from the energies of the last few steps:
 
 ```math
 \sigma_{IJ} \approx \frac{\mathrm{sign}(\Delta E_{IJ})}{2}\sqrt{\frac{\ddot{\Delta E}_{IJ}}{\Delta E_{IJ}}}, \qquad \Delta E_{IJ} = E_I - E_J
@@ -55,7 +55,7 @@ Reference: T. do Casal, Toldo, Pinheiro and Barbatti, *Open Research Europe* 1, 
 
 ## Which to use
 
-Start with coupling vectors (`vdoth = 0`): they are analytic EOM-CCSD couplings (the CI part, which dominates for most systems), not an estimate from energies. Use Baeck-An couplings when coupling jobs are too expensive for the molecule, or with EOM-SF if you prefer not to rely on its undocumented coupling vectors.
+Start with coupling vectors (`vdoth = 0`): they are analytic EOM-CCSD couplings (the CI part, which dominates for most systems), not an estimate from energies. Use TD-BA couplings when coupling jobs are too expensive for the molecule, or with EOM-SF if you prefer not to rely on its undocumented coupling vectors.
 
 ## Letting NewtonX choose the pairs
 
