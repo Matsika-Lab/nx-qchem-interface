@@ -61,7 +61,7 @@ Every method has the same parts, in this order. They are `##` headings on a page
 
 1. **When to use it:** one or two sentences, as a `>` blockquote, with a "Couplings:" line.
 2. **Keywords:** table `Keyword | Example value | Meaning`, including the reference and the states.
-3. **Couplings allowed:** coupling vectors, Baeck-An, or both.
+3. **Couplings allowed:** coupling vectors, TD-BA couplings, or both.
 4. **Template:** the method block, with a link to the full template file.
 5. **Settings:** the settings file keys that matter for this method.
 6. **Pitfalls:** what goes wrong, and how you notice it.
