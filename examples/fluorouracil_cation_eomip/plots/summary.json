@@ -1,0 +1,15 @@
+{
+  "time_fs": 2.0,
+  "steps": 9,
+  "nstat": 3,
+  "initial_state": 3,
+  "final_state": 3,
+  "hops": [],
+  "max_abs_dEtot_meV": 0.2585081671374274,
+  "final_dEtot_meV": 0.1896633640996078,
+  "final_populations": [
+    0.001703595,
+    0.004872109,
+    0.993424296
+  ]
+}

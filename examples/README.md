@@ -12,7 +12,7 @@ nohup $NX/moldyn.pl > moldyn.log 2>&1 &
 
 The inputs use a fixed `seed`, so a rerun on the same Q-Chem build should follow the same trajectory closely (multithreaded Q-Chem is not bit-reproducible).
 
-| Example | Method | What it shows | Length | Cost per step (4 cores) |
+| Example | Method | What it shows | Length | Cost per step (4 cores unless noted) |
 |---|---|---|---|---|
 | [methane_cation_eomip_full](methane_cation_eomip_full) | EOM-IP | CH₄⁺ relaxation through its Jahn–Teller crossings, all couplings computed (`nac_mode = full`) | 50 fs | 58 s |
 | [methane_cation_eomip_carry](methane_cation_eomip_carry) | EOM-IP | the same trajectory with `nac_mode = carry` | 50 fs | 28 s |
@@ -20,6 +20,7 @@ The inputs use a fixed `seed`, so a rerun on the same Q-Chem build should follow
 | [methyl_radical_eomea](methyl_radical_eomea) | EOM-EA | CH₃ radical from the CH₃⁺ reference; C–H dissociation, ending where the reference breaks down | 26 fs | 70 s |
 | [methaniminium_eomee](methaniminium_eomee) | EOM-EE | S₂ → S₁ decay of CH₂NH₂⁺, ending where EOM-EE breaks down | 14.5 fs | 84 s |
 | [ethylene_eomsf](ethylene_eomsf) | EOM-SF | ππ* ethylene; a UHF reference that switches solutions, and how [`scf_check`](../docs/qchem-par.md#scf_check) detects it | 9 fs | 152 s |
+| [fluorouracil_cation_eomip](fluorouracil_cation_eomip) | EOM-IP | 5-fluorouracil cation (12 atoms): the cost of all couplings for a larger molecule | 2 fs | 51 min (16 cores) |
 
 The three methane runs start from the same geometry, velocities and random seed, so they show what the cheaper [coupling modes](../docs/couplings.md#coupling-modes) change. All three give the same trajectory, at half the cost for `carry` and `active`; see the [comparison](../docs/validation.md#coupling-modes).
 

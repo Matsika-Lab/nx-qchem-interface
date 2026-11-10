@@ -153,7 +153,7 @@ With 3 states, `carry` and `active` skip one pair, the one between the two inact
 **Setup.**
 
 - **Versions.** Interface 2.0 development, commits `28fce79`–`830c9bf` (November 2026): each example ran with the script as it stood between the interface rework and the commit that added its results. NewtonX 2.4 (build 06), Q-Chem 5.4.1, cc-pVDZ, tight thresholds.
-- **Conditions.** 4 cores per run (`nt = 4`), node002, with other jobs sharing the node; node load not recorded.
+- **Conditions.** 4 cores per run (`nt = 4`), except 16 for 5-fluorouracil (`nt = 16`), node002, with other jobs sharing the node; node load not recorded.
 - **Measure.** For each step, the sum of `Total job time: … s(wall)` over the Q-Chem jobs in its archived output (`INFO_RESTART/qchem_outputs/<time>.out.gz`, without `after_hop` runs); the table gives the median over the steps.
 
 | Example | Method | States | Q-Chem jobs per step | Steps | Median per step |
@@ -164,8 +164,9 @@ With 3 states, `carry` and `active` skip one pair, the one between the two inact
 | [methyl_radical_eomea](../examples/methyl_radical_eomea) | EOM-EA | 3 | 2 | 104 | 70 s |
 | [methaniminium_eomee](../examples/methaniminium_eomee) | EOM-EE | 3 | 2 | 30 | 84 s |
 | [ethylene_eomsf](../examples/ethylene_eomsf) | EOM-SF | 3 | 2 | 18 | 152 s |
+| [fluorouracil_cation_eomip](../examples/fluorouracil_cation_eomip) | EOM-IP | 3 | 2 | 9 | 3072 s (51 min), 16 cores |
 
-**Conclusion.** With 3 states and cc-pVDZ, a step with all couplings costs about 1 to 2.5 minutes on 4 cores for these small molecules, and half of that with one job per step.
+**Conclusion.** With 3 states and cc-pVDZ, a step with all couplings costs about 1 to 2.5 minutes on 4 cores for these small molecules, and half of that with one job per step. For the 12-atom 5-fluorouracil cation, a step costs 51 minutes on 16 cores.
 
 ## Option recommendations
 
