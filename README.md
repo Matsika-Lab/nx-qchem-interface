@@ -2,7 +2,7 @@
 
 `run-qchem-eom.pl` lets [NewtonX](https://newtonx.org/) 2.x run trajectory surface hopping on Q-Chem equation-of-motion coupled-cluster (EOM-CCSD) potential energy surfaces. At every time step it runs Q-Chem and passes back state energies, gradients and nonadiabatic coupling vectors, with their signs kept continuous along the trajectory.
 
-**Methods:** EOM-IP-CCSD, EOM-EA-CCSD, EOM-EE-CCSD and EOM-SF-CCSD. **Tested with** NewtonX 2.4 and Q-Chem 5.4.1 (November 2026).
+**Methods:** EOM-IP-CCSD, EOM-EA-CCSD, EOM-EE-CCSD and EOM-SF-CCSD. **Tested with** NewtonX 2.4 and 2.6, and Q-Chem 5.4.1 (November 2026). The interface adapts to the NewtonX version by itself.
 
 ## Quick start
 

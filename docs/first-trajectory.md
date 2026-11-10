@@ -63,7 +63,7 @@ Any NewtonX initial-condition method works; to check vertical energies and inten
 1. Run the frequency job with `MOLDEN_FORMAT TRUE`.
 2. Convert it: `python3 tools/qchem_freq_to_nx.py freq.out IC`. NewtonX expects all 3N modes with the translations and rotations first, while Q-Chem prints only the vibrations; the tool adds the missing modes as zeros and writes `IC/molden.freq` and `IC/geom` (bohr).
 3. In `IC`, sample with NewtonX's `initcond.pl` using its MOLDEN reader (`iprog = 5`, `nm_flag = 2`, `file_nmodes = molden.freq`); see [Initial conditions and spectra](initial-conditions.md).
-4. Make the trajectory folders from the sampled points with NewtonX's `$NX/makedir.pl`, or copy one point's geometry and velocities from `final_output` into `geom` and `veloc`.
+4. Make the trajectory folders from the sampled points with NewtonX's `$NX/makedir.pl`, or copy one point's geometry and velocities from `final_output.1.<k>` (`initial_condition.1.<k>` in NewtonX 2.6) into `geom` and `veloc`.
 
 ## 5. Choose the interface settings (`qchem.par`, optional)
 

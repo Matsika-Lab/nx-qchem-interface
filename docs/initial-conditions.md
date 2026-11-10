@@ -54,7 +54,7 @@ An `initqp_input` that keeps points whose excitation lies within 9.7 ± 1.0 eV (
 /
 ```
 
-`nis` must be 1: transitions start from state 1. States 2 to `nfs` are all checked, each in its own `final_output.1.<k>`; use the file of the state you start on (`final_output.1.3` here). The template must ask for enough states: `nfs − 1` for EE, IP and EA, and `nfs` for SF. Run it with `$NX/initcond.pl > initcond.log`.
+`nis` must be 1: transitions start from state 1. States 2 to `nfs` are all checked, each in its own `final_output.1.<k>` (NewtonX 2.4) or `initial_condition.1.<k>` (NewtonX 2.6); use the file of the state you start on (`final_output.1.3` here). The template must ask for enough states: `nfs − 1` for EE, IP and EA, and `nfs` for SF. Run it with `$NX/initcond.pl > initcond.log`.
 
 For each point, `initcond.log` shows the states (here the first sampled point of methaniminium):
 

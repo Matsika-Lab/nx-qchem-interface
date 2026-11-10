@@ -237,5 +237,30 @@ o=$WORK/freq_ch4; python3 $HERE/../tools/qchem_freq_to_nx.py $HERE/data/freq_ch4
 cmp -s $o/molden.freq $HERE/data/freq_ch4/expected.molden.freq && cmp -s $o/geom $HERE/data/freq_ch4/expected.geom \
   && ok "qchem_freq_to_nx.py: 6 zero modes added, geom in bohr (methane)" || bad "qchem_freq_to_nx.py output differs from tests/data/freq_ch4"
 
+# 13. NewtonX 2.6 phase_correction aligns h(t) with 2 h(t-dt) - h(t-2dt). The interface
+#     writes nad_vectors-2dt so that this reference equals its own h(t) for every pair,
+#     including one that was zero at t-dt. Without nad_vectors-dt (NewtonX 2.4) nothing is written.
+d=$(new_traj fluorouracil_active nx26 "nac_mode = active")
+outs=($(ls $HERE/data/fluorouracil_active/outputs/*.out.gz | sort -t/ -k1 -V))
+step $d ${outs[0]} 0 && step $d ${outs[1]} 1
+python3 - $d <<'EOF'
+import sys, numpy as np
+d = sys.argv[1]
+h = np.full((3, 12, 3), 0.02)
+h[1] = 0.0                                   # pair 1 (states 1-3) zero at t-dt
+np.savetxt(d + '/nad_vectors-dt', h.reshape(-1, 3))
+np.savetxt(d + '/nad_vectors-2dt', np.full((36, 3), 0.5))
+EOF
+step $d ${outs[2]} 2
+python3 - $d <<'EOF' && ok "NewtonX 2.6: phase_correction reference equals the interface's vectors" || bad "NewtonX 2.6: 2 h(t-dt) - h(t-2dt) differs from nad_vectors"
+import sys, numpy as np
+d = sys.argv[1]
+h0, h1, h2 = (np.loadtxt(d + f) for f in ('/nad_vectors', '/nad_vectors-dt', '/nad_vectors-2dt'))
+sys.exit(0 if np.linalg.norm(h0) > 0.1 and np.allclose(2 * h1 - h2, h0, atol=1e-10) else 1)
+EOF
+rm -f $d/nad_vectors-dt; cp $d/nad_vectors-2dt $d/keep-2dt
+step $d ${outs[3]} 3
+cmp -s $d/nad_vectors-2dt $d/keep-2dt && ok "NewtonX 2.4 (no nad_vectors-dt): nothing written" || bad "nad_vectors-2dt changed without nad_vectors-dt"
+
 echo "$pass passed, $fail failed"
 [ $fail -eq 0 ]

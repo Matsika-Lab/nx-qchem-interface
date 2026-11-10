@@ -747,6 +747,7 @@ sub treat_nacme {
     write_vectors("nad_vectors");
     adjust_phase();
     copy( "nad_vectors", "newh" ) or die "$mdle Copy failed: $!";
+    keep_signs_in_nx_phase_correction();
     update_phase_ref( \%ref );
     print_nacme() if $par{print_extracted};
 }
@@ -838,6 +839,33 @@ sub adjust_phase {
 # INFO_RESTART/nac_phase_ref. escalar can only compare with t-dt; a pair that was not
 # computed at t-dt (after a hop, in "active" mode) is aligned to this reference instead.
 #------------------------------------------------------------------------------------
+
+sub keep_signs_in_nx_phase_correction {
+    #
+    # NewtonX 2.6 and later run their own phase_correction after this script when
+    # getphase = 1 (the 2.6 default for vdoth = 0; NewtonX writes it into every sh.inp).
+    # It flips each pair against href = 2 h(t-dt) - h(t-2dt). That reference fails in two
+    # common cases: a pair that was zero at t-dt (adiabatic step, pair not computed) gets
+    # href = -h(t-2dt), and a coupling decaying faster than by half per step after a spike
+    # near a crossing gets href close to -h(t-2dt). Either way NewtonX would flip the vector
+    # against its previous value (seen in a 2.6 test: cos -0.60 and -0.21 at the two steps
+    # after |d23| fell from 274 to 31 to 13.5). The signs here are already aligned (escalar
+    # and nac_phase_ref), so they are kept: only phase_correction reads nad_vectors-2dt, and
+    # writing h(t-2dt) = 2 h(t-dt) - h(t) makes href = h(t). At istep 1 NewtonX uses
+    # href = h(t-dt), which the alignment here already agrees with.
+    # NewtonX 2.4 has no nad_vectors-dt; nothing is done there.
+    #
+    return unless $istep > 1 && -s "nad_vectors-dt";
+    my @h1 = read_vector_file("nad_vectors-dt");
+    my @h0 = read_vector_file("nad_vectors");
+    open( my $fo, '>', "nad_vectors-2dt" ) or die "$mdle Cannot write nad_vectors-2dt: $!";
+    for my $k ( 0 .. $ncoup - 1 ) {
+        for my $ia ( 0 .. $nat - 1 ) {
+            printf $fo "%25.16f%25.16f%25.16f\n", map { 2 * $h1[$k][$ia][$_] - $h0[$k][$ia][$_] } 0 .. 2;
+        }
+    }
+    close($fo);
+}
 
 sub read_vector_file {
     my ($file) = @_;

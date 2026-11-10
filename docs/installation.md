@@ -8,7 +8,7 @@ This page installs the interface into NewtonX and checks that it works. It takes
 
 | Program | Version | Notes |
 |---|---|---|
-| NewtonX | 2.x (tested 2.4) | `$NX` must point to its `bin` folder. |
+| NewtonX | 2.x (tested 2.4 and 2.6) | `$NX` must point to its `bin` folder. The same installer and inputs work with both; see [Coupling signs](couplings.md#newtonx-26) for what 2.6 adds. |
 | Q-Chem | 5.4 or later (tested 5.4.1) | `qchem` on your `PATH` and `$QCSCRATCH` set. |
 | Perl | 5.14 or later | Only core modules are used. |
 | Python 3 with NumPy and Matplotlib | any recent | NumPy for the tests and tools; Matplotlib only for the plots. |

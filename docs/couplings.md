@@ -89,6 +89,16 @@ run-qchem-eom.pl: Coupling pair 2 (states 2-3): aligned to stored reference from
 
 Couplings with a norm below 10⁻³ a.u. are too weak to define a direction: they neither replace a stored reference nor get aligned to one, and their sign has no effect on the dynamics. If the two vectors are nearly perpendicular (|cos θ| below [`phase_warn`](par-reference.md)), the sign is uncertain, and the interface warns. Pairs are numbered the NewtonX way: 0 = states 1–2, 1 = states 1–3, 2 = states 2–3, 3 = states 1–4, and so on.
 
+### NewtonX 2.6
+
+NewtonX 2.6 adds its own sign check, run after the interface when `getphase = 1` in `sh.inp` (the 2.6 default for `vdoth = 0`). It flips each vector that points against a linear extrapolation from the two previous steps, $`2\,\mathbf{d}(t-\Delta t) - \mathbf{d}(t-2\Delta t)`$.
+
+For EOM-CC couplings, this extrapolation fails in two common cases:
+- **A pair that was zero at the previous step** (an adiabatic step, or a pair not computed) gets the reference $`-\mathbf{d}(t-2\Delta t)`$, which points against its last vector.
+- **A coupling that decays fast after a spike near a crossing.** When it falls by more than half per step, the reference again points roughly along $`-\mathbf{d}(t-2\Delta t)`$. In a 2.6 test, $`|\mathbf{d}_{23}|`$ fell from 274 to 31 to 13.5 bohr⁻¹, and NewtonX flipped the vector against its previous value at the next two steps (cos −0.60, then −0.21).
+
+The interface has already aligned the signs, so on NewtonX 2.6 it keeps them. It writes the extrapolation input `TEMP/nad_vectors-2dt` so that the reference equals its own vectors, and NewtonX's check then changes nothing. No setting is needed, and NewtonX 2.4 and 2.6 give the same signs. Setting `getphase = 0` skips NewtonX's check altogether, with the same result.
+
 ## After a hop
 
 After a hop, NewtonX calls the interface again at the same geometry for the gradient of the new state. A coupling job has already computed the gradients of all states, and they do not depend on which state the job targeted, so the interface reuses them without running Q-Chem. If no gradient of the new state exists, as with gradient-only steps, Q-Chem runs again, and its output is archived as `<time>.after_hop.out.gz`.
