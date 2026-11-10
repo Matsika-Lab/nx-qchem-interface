@@ -50,7 +50,7 @@ $end
 |---|---|---|
 | `control.dyn` | `nstat` | At most the n of `EA_STATES`. |
 | `qchem.par` | [`nac_mode`](../qchem-par.md#nac_mode) | Keep the default, `nx`. |
-| `sh.inp` | [`vdoth`](../qchem-par.md#related-newtonx-settings) | `0`; `2` for large molecules. |
+| `sh.inp` | [`vdoth`](../qchem-par.md#related-newtonx-settings) | `0`, set explicitly (NewtonX's default is `2`); `2` for large molecules. |
 
 ## Pitfalls
 
@@ -60,7 +60,7 @@ $end
 
 ## Cost
 
-About 70 s per step on 4 cores for the [methyl-radical example](../../examples/methyl_radical_eomea) with 3 states; see [Validation](../validation.md) for what each option costs.
+About 70 s per step on 4 cores of a shared node for the [methyl-radical example](../../examples/methyl_radical_eomea) with 3 states; see [Validation](../validation.md#7-cost-per-step-of-the-examples).
 
 ## See also
 

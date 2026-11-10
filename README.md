@@ -6,7 +6,7 @@
 
 | Software | Version |
 |---|---|
-| NewtonX | 2.4 (build 06) or 2.6 (build 01); the interface adapts to the version by itself |
+| NewtonX | 2.4 (build 06) or 2.6 (build 01); the interface adapts to the version by itself ([Validation](docs/validation.md#6-newtonx-26-compatibility)) |
 | Q-Chem | 5.4 or later, tested with 5.4.1 |
 | Perl | 5.14 or later, core modules only |
 | Python 3 | with NumPy, for the tests and tools; Matplotlib for the plots |
@@ -36,7 +36,7 @@ Then run the methane-cation example:
    nohup $NX/moldyn.pl > moldyn.log 2>&1 &
    ```
 
-This runs a complete 50 fs trajectory: 200 steps of about 60 s each on 4 cores, so 3–4 hours ([Validation](docs/validation.md#coupling-modes)). To set up your own molecule, follow [Your first trajectory](docs/first-trajectory.md).
+This runs a complete 50 fs trajectory: 200 steps of about 60 s each on 4 cores of a shared node, so 3–4 hours ([Validation](docs/validation.md#7-cost-per-step-of-the-examples)). To set up your own molecule, follow [Your first trajectory](docs/first-trajectory.md).
 
 ## Methods
 

@@ -52,7 +52,7 @@ $end
 | `control.dyn` | `nstatdyn` | Check the order of the states at your starting geometry with a single-point run before you choose it. |
 | `qchem.par` | [`nac_mode`](../qchem-par.md#nac_mode) | Keep the default, `nx`. |
 | `qchem.par` | [`scf_check`](../qchem-par.md#settings) | Keep the default, `auto`, which turns it on for the triplet reference. |
-| `sh.inp` | [`vdoth`](../qchem-par.md#related-newtonx-settings) | `2` if you prefer not to rely on the undocumented coupling vectors; otherwise `0`. |
+| `sh.inp` | [`vdoth`](../qchem-par.md#related-newtonx-settings) | `2` (NewtonX's default) if you prefer not to rely on the undocumented coupling vectors; otherwise `0`, set explicitly. |
 
 ## Pitfalls
 
@@ -65,7 +65,7 @@ $end
 
 ## Cost
 
-About 150 s per step on 4 cores for the [ethylene example](../../examples/ethylene_eomsf) with 3 states; see [Validation](../validation.md) for what each option costs.
+About 150 s per step on 4 cores of a shared node for the [ethylene example](../../examples/ethylene_eomsf) with 3 states; see [Validation](../validation.md#7-cost-per-step-of-the-examples).
 
 ## See also
 

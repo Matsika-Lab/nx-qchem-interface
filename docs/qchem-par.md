@@ -169,7 +169,7 @@ These live in NewtonX's own input files but change what the interface does.
 
 | File | Keyword | Effect on the interface |
 |---|---|---|
-| `sh.inp` | `vdoth` | `0`: coupling vectors from Q-Chem (needs `CALC_NAC 2`). `2`: NewtonX computes Baeck-An couplings from energies, and the interface runs one gradient-only job. Other values are refused. |
+| `sh.inp` | `vdoth` | NewtonX's default is `2` when `sh.inp` has no `vdoth`. `0`: coupling vectors from Q-Chem (needs `CALC_NAC 2`). `2`: NewtonX computes Baeck-An couplings from energies, and the interface runs one gradient-only job. Other values are refused. |
 | `sh.inp` | `seed` | `1` means a random seed from the clock. Use another number for reproducible hops. |
 | `jiri.inp` | `kross`, `cascade`, `current`, `never_state`, `include_pair` | Which pairs NewtonX asks for when `nac_mode = nx`. |
 | `control.dyn` | `thres` | Pairs are asked for only when their gap is below this value (eV). |

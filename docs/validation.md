@@ -13,7 +13,7 @@ This page collects every benchmark and validation run of the interface: what eac
 | 3 | [Interface features](#3-interface-features) | Orbital reuse, multi-job inputs, gradient reuse | SCF 11 → 2 cycles, job 15.8 → 11.2 s | Pass: identical energies and gradients |
 | 4 | [Coupling modes](#coupling-modes) | `full`, `carry` and `active` on one methane-cation trajectory | 58, 28 and 27 s per step ([test 7](#7-cost-per-step-of-the-examples)) | Same hops; total energies within 0.01 meV; populations within 0.006 |
 | 5 | [Regression tests](#5-regression-tests) | `tests/run_tests.sh` with NewtonX 2.4 and 2.6 | 42 tests | Pass on 2.4-B06 and 2.6-B01 |
-| 6 | [NewtonX 2.6 compatibility](#6-newtonx-26-compatibility) | test-nx, coupling signs in mixed dynamics, initial conditions | phase +1, cos 1.0 at every step | Pass: same Q-Chem jobs, hops and initial conditions as 2.4 |
+| 6 | [NewtonX 2.6 compatibility](#6-newtonx-26-compatibility) | test-nx, coupling signs in mixed dynamics, initial conditions | NewtonX keeps every interface sign | Pass: same Q-Chem jobs, hops and initial conditions as 2.4 |
 | 7 | [Cost per step of the examples](#7-cost-per-step-of-the-examples) | Median Q-Chem wall time per step of every example trajectory | 27 s (EOM-IP, `active`) to 152 s (EOM-SF) | Measured from the archived outputs |
 
 ## 1. Q-Chem options for one coupling job
@@ -40,7 +40,7 @@ This page collects every benchmark and validation run of the interface: what eac
 | tight, RI | `AUX_BASIS rimp2-cc-pVDZ` | crash: same message | | | | |
 | tight, mixed-precision EOM | `CC_SINGLE_PREC 2`, `EOM_SINGLE_PREC 2` | stops: `Mixed-Precision EOM is not yet implemented!` | | | | |
 
-**Conclusion.** Tight thresholds cost 27% more per job and remove errors of about 10 μEh in energies and 6 × 10⁻³ a.u. in couplings, while Cholesky and RI crash with couplings, mixed-precision EOM is not implemented, mixed CCSD is no faster, XM is twice as slow, and full single precision is 7% faster than default double precision at the accuracy of default thresholds.
+**Conclusion.** Tight thresholds are worth their 27% cost, and no other option makes a coupling job cheaper without crashing or losing accuracy.
 
 ## 2. Gradient-only jobs
 
@@ -60,7 +60,7 @@ This page collects every benchmark and validation run of the interface: what eac
 | tight, Cholesky (`CHOLESKY_TOL 4`) | 23.6 | 15.0 | 2.1 × 10⁻⁵ |
 | tight, RI (`AUX_BASIS rimp2-cc-pVDZ`) | 22.7 | 278.9 | 1.5 × 10⁻⁴ |
 
-**Conclusion.** One gradient job takes 36% less time than a coupling job and replaces $`n-1`$ of them, while Cholesky and RI run here but give no gain for a molecule of this size, and RI costs accuracy.
+**Conclusion.** Gradient-only steps are the largest saving, and Cholesky and RI integrals do not make them cheaper for a molecule of this size.
 
 ## 3. Interface features
 
@@ -137,7 +137,7 @@ With 3 states, `carry` and `active` skip one pair, the one between the two inact
 
 | Check | Result on NewtonX 2.6 |
 |---|---|
-| test-nx Q-Chem case | `Normal termination of all tests`; one file differs from the standard results, and NewtonX reports that the differences "do not seem to be relevant" |
+| test-nx Q-Chem case | `Normal termination of all tests`. Only `RESULTS/dyn.out` differs from NewtonX's standard results: 21 of 196 lines, by at most 1.6 × 10⁻⁷ (the largest relative difference, 0.6%, is in the total linear momentum, a value of about 10⁻⁵), from multithreaded Q-Chem |
 | Coupling signs, mixed dynamics | NewtonX's phase correction gives phase +1 and cos 1.0 at every step |
 | Q-Chem jobs and hops, mixed dynamics | 9 Q-Chem jobs; hop 3 → 2 at 1.5 fs; the same as on 2.4 |
 | Initial conditions | Same excitation energies and oscillator strengths as on 2.4; geometries agree to within 3 × 10⁻⁶ bohr |
@@ -169,7 +169,7 @@ With 3 states, `carry` and `active` skip one pair, the one between the two inact
 
 ## Option recommendations
 
-The verdicts that follow from tests 1–4.
+This section summarizes tests 1–4 and is not a separate test; the numbers come from those sections.
 
 | Option | Verdict |
 |---|---|
