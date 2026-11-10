@@ -97,6 +97,18 @@ H1 with the molecule and method, one paragraph saying what the run shows, a sett
 - Use tables for settings, requirements, files and error messages, and prose for explanations.
 - Say why a step matters when it is not obvious, in one sentence.
 
+## Terms
+
+| Use | For | Not |
+|---|---|---|
+| active state | The state the trajectory moves on (`nstatdyn`) | current state, running state |
+| coupling vectors | Nonadiabatic coupling vectors from the electronic-structure program (`vdoth = 0`); "NAC" only in keywords and file names | NACs, NACMEs |
+| TD-BA couplings | Time-dependent Baeck-An couplings that NewtonX computes from energies (`vdoth = 2`); spell out "time-dependent Baeck-An (TD-BA)" at first use on each page | Baeck-An alone, BA |
+| hop | A surface hop | jump, except when quoting NewtonX |
+| step | One NewtonX time step | iteration |
+| interface call | One call of the run script by NewtonX; a step with a hop has two | |
+| version | Semantic version, for example 2.0.0 | |
+
 ## Formatting
 
 - **Code:** keywords, file names, paths, commands and values in backticks. Code blocks always name a language (`bash`, `text`, `perl`, `python`). Comments in commands are short and follow `#`.

@@ -2,7 +2,7 @@
 
 All notable changes to the NewtonX–Q-Chem interface. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [2.0] - 2026-11-09
+## [2.0.0] - 2026-11-09
 
 Refactored and improved with Claude Code (Anthropic), using the Claude Opus 5.5 model; see the AI-use note in the [README](README.md#credits-citation-and-license).
 
@@ -32,16 +32,16 @@ Refactored and improved with Claude Code (Anthropic), using the Claude Opus 5.5 
 
 - Coupling signs after a hop: a pair computed for the first time after a hop could have the opposite sign to its last value.
 
-## [1.1] - 2026-08-10
+## [1.1.0] - 2026-08-10
 
 ### Added
 
 - Archiving intervals for the Q-Chem outputs.
 
-## [1.0] - 2025-12-10
+## [1.0.0] - 2025-12-10
 
 First version of the interface, with a sample trajectory.
 
-[2.0]: https://github.com/Matsika-Lab/nx-qchem-interface/compare/e0ba2d6...main
-[1.1]: https://github.com/Matsika-Lab/nx-qchem-interface/compare/296e7bc...e0ba2d6
-[1.0]: https://github.com/Matsika-Lab/nx-qchem-interface/commit/9043351
+[2.0.0]: https://github.com/Matsika-Lab/nx-qchem-interface/compare/e0ba2d6...main
+[1.1.0]: https://github.com/Matsika-Lab/nx-qchem-interface/compare/296e7bc...e0ba2d6
+[1.0.0]: https://github.com/Matsika-Lab/nx-qchem-interface/commit/9043351

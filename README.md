@@ -73,7 +73,7 @@ EOM-EE dynamics covers excited states only: the ground state is not among the st
 ## Credits, citation and license
 
 - **Authors:** Dakshitha Abeygunewardane and Spiridoula Matsika, Matsika Lab, Department of Chemistry, Temple University. The interface follows the NewtonX third-party-program interface template by Mario Barbatti (2021).
-- **AI use:** the 2026-11-09 revision (version 2.0) was refactored and improved with Claude Code (Anthropic), using the Claude Opus 5.5 model.
+- **AI use:** The 2026-11-09 revision (version 2.0.0) was refactored and improved with Claude Code (Anthropic), using the Claude Opus 5.5 model.
   - **What it covered:**
     - the coupling-sign handling and the interface rework (`qchem.par`, coupling modes, gradient-only steps, NewtonX 2.6 support);
     - `run-qchem-eom-initcond.pl`;
