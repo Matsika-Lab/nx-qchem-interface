@@ -80,8 +80,8 @@ These appear in `DEBUG/runnx.error` of the initial-conditions folder.
 | Symptom | Cause | What to do |
 |---|---|---|
 | Total energy drifts or jumps by more than a few tens of meV | Loose convergence, or a time step too large near a crossing. | Use the tight thresholds in [Methods](methods/README.md#keywords-shared-by-all-methods), or a smaller `dt`. |
-| Two runs from the same initial condition hop differently | `seed = 1` in `sh.inp` draws a different random seed each run. | Set `seed` to any number other than `1`. |
-| Steps are slower than expected | Every coupling job also computes all gradients. | See [Validation](validation.md) for cheaper choices: `nac_mode`, `thres` and `vdoth = 2`. |
+| Two runs from the same initial condition hop differently | `seed = 1` in `sh.inp`, NewtonX's default, draws a different random seed each run (checked in NewtonX 2.4 and 2.6 `sh.f90`). | Set `seed` to any number other than `0` and `1`. |
+| Steps are slower than expected | Each coupling job is a full EOM-CCSD calculation with gradients, and a step costs one job per targeted state ([typical costs](validation.md#7-cost-per-step-of-the-examples)). | Run fewer jobs per step: [`nac_mode`](qchem-par.md#nac_mode) `carry` or `active`, adiabatic steps with `thres`, or `vdoth = 2` ([Validation](validation.md#option-recommendations)). |
 | `$QCSCRATCH` fills up | Each trajectory keeps one small orbital file in `$QCSCRATCH/nxqc_<id>`. Q-Chem's own scratch folders are removed after each job. | Delete the `nxqc_<id>` folders after the runs. |
 
 ## See also

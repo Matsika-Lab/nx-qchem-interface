@@ -16,7 +16,7 @@ An annotated copy with every key and its default is in [`qchem.par.example`](../
 
 ## Format
 
-- **Location.** Put `qchem.par` in the trajectory folder. NewtonX copies it into `TEMP/` when the run starts. A copy in `JOB_NAD/` is read when there is none in `TEMP/`.
+- **Location.** Put `qchem.par` in the trajectory folder. NewtonX checks its keys and copies it into `TEMP/` when the run starts. Do not put it in `JOB_NAD/` or `JOB_AD/`: NewtonX copies those folders into `TEMP/` before every step, so a copy there would replace the checked one on some steps (checked in NewtonX 2.4 and 2.6 `moldyn.pl`).
 - **Syntax.** One `key = value` per line. `#` starts a comment, and blank lines are ignored.
 - **Case and spaces.** Keys and values are read in lowercase, so `NAC_MODE = Full` works. A value is a single word without spaces.
 - **Unknown keys stop the run.** NewtonX checks the keys at start-up and stops with `Unknown keyword`, so a typo never falls back to a default.
@@ -170,9 +170,9 @@ These live in NewtonX's own input files but change what the interface does.
 | File | Keyword | Effect on the interface |
 |---|---|---|
 | `sh.inp` | `vdoth` | NewtonX's default is `2` when `sh.inp` has no `vdoth`. `0`: coupling vectors from Q-Chem (needs `CALC_NAC 2`). `2`: NewtonX computes Baeck-An couplings from energies, and the interface runs one gradient-only job. Other values are refused. |
-| `sh.inp` | `seed` | `1` means a random seed from the clock. Use another number for reproducible hops. |
+| `sh.inp` | `seed` | `1` (the default) means a random seed from the clock, and `0` a fixed default seed. Use any other number for reproducible hops (checked in NewtonX 2.4 and 2.6 `sh.f90`). |
 | `jiri.inp` | `kross`, `cascade`, `current`, `never_state`, `include_pair` | Which pairs NewtonX asks for when `nac_mode = nx`. |
-| `control.dyn` | `thres` | Pairs are asked for only when their gap is below this value (eV). |
+| `control.dyn` | `thres` | Pairs are asked for only when their gap is below this value (eV). When the gaps to the states just below and just above the active state both exceed it, the step is adiabatic (`typeofdyn.out` type 1), and the interface runs one gradient-only job (checked in NewtonX 2.4 and 2.6 `typeofdyn.f90`). |
 
 ## See also
 

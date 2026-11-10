@@ -132,7 +132,7 @@ sub define_variables {
 sub read_parameters {
     #
     # Read "keyword = value" lines from qchem.par (NewtonX copies it into TEMP/).
-    # A copy in JOB_NAD/ is also accepted. '#' starts a comment.
+    # JOB_NAD/qchem.par is a last resort only; see docs/qchem-par.md. '#' starts a comment.
     #
     my $file;
     for my $f ( $fpar, "$JND/$fpar" ) {
