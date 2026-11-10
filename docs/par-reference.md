@@ -31,16 +31,24 @@ nac_mode = full
 
 ## `nac_mode`
 
-Q-Chem computes, in one job, the couplings between the targeted state and every other state. `nac_mode` decides how many jobs run per step, and what happens to couplings between two states that are not the active state.
+Which coupling vectors are computed at each step, and so how many Q-Chem jobs run.
 
-| Value | Q-Chem jobs per step (n states) | Couplings between two inactive states |
-|---|---|---|
-| `nx` | the fewest that give the pairs NewtonX asks for (n − 1 with NewtonX's defaults; one gradient-only job when NewtonX asks for none) | computed when NewtonX asks for them, zero otherwise |
-| `full` | n − 1 | computed every step |
-| `carry` | 1 | last computed value, sign-aligned |
-| `active` | 1 | zero |
+**Why it matters.** One Q-Chem job gives the couplings of one state with every other state. The interface always targets the active state first, so one job covers every pair that includes the active state. A pair of two *other* states needs an extra job targeting one of them.
 
-`full`, `carry` and `active` override NewtonX's own coupling selection. `nac_mode` has no effect with `vdoth = 2` or on adiabatic steps, which need only a gradient. What each mode does to the dynamics is explained in [Couplings](couplings.md#coupling-modes).
+For example, with 3 states and the trajectory on state 2, one job gives pairs 1–2 and 2–3. Pair 1–3 needs a second job.
+
+| Value | Pairs with the active state | Pairs of two other states | Q-Chem jobs per step (n states) |
+|---|---|---|---|
+| `nx` (default) | computed when NewtonX asks for them | computed when NewtonX asks for them, otherwise zero | up to n − 1. With NewtonX's default settings it asks for every pair, so n − 1. When it asks for none, 1 gradient-only job |
+| `full` | always computed | always computed | n − 1 |
+| `carry` | always computed | not computed: each keeps the value from the last step it was computed (for example before a hop), with its sign kept consistent; zero until it has been computed once | 1 |
+| `active` | always computed | not computed: set to zero | 1 |
+
+- Use `nx` unless you have a reason not to: NewtonX's `jiri.inp` and `thres` settings then decide which pairs matter.
+- `full`, `carry` and `active` ignore what NewtonX asks for. `carry` and `active` cost one job per step whatever n is; [compare them with `full`](benchmarks/README.md#coupling-modes) on a few trajectories before relying on them.
+- `nac_mode` has no effect with `vdoth = 2` or on adiabatic steps, which need only a gradient.
+
+What each mode does to the dynamics is explained in [Couplings](couplings.md#coupling-modes).
 
 ## Related NewtonX settings
 
