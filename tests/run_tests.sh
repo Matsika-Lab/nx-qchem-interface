@@ -59,7 +59,7 @@ d=$(new_traj fluorouracil_active fu_active "nac_mode = active")
 if replay $d fluorouracil_active; then
   n=$(nphase_bad $d/../snap 12)
   [ "$n" = "0" ] && ok "5-FU active: no sign inconsistencies over 13 steps" || bad "5-FU active: $n sign inconsistencies"
-  grep -q "pair 2: aligned to stored reference from t=0.0000 (cos=-0.6993, phase=-1)" $d/../snap/1.5000.log \
+  grep -q "pair 2 (states 2-3): aligned to stored reference from t=0.0000 (cos=-0.6993, phase=-1)" $d/../snap/1.5000.log \
     && ok "5-FU active: d32 re-aligned after the hop at 1.5 fs" || bad "5-FU active: d32 not re-aligned at 1.5 fs"
   [ -s $d/../INFO_RESTART/qchem_outputs/6.0000.out.gz ] && zcat $d/../INFO_RESTART/qchem_outputs/6.0000.out.gz | cmp -s - $d/qchem.out \
     && ok "archive: gzipped output matches qchem.out" || bad "archive: gzipped output missing or different"
@@ -114,10 +114,10 @@ else bad "stop_on_unconverged = 0 did not continue with a warning"; fi
 d=$(new_traj methane_full e_njobs); zcat $OUT0 | awk '/^Running Job 2 of 2/ {exit} {print}' | { mkdir -p $WORK/onejob; gzip > $WORK/onejob/0.0000.out.gz; }
 expect_fail "a missing Q-Chem job stops the run" "Expected 2 Q-Chem job(s)" $d $WORK/onejob/0.0000.out.gz
 # Adiabatic step (mixed dynamics with THRES): JOB_AD template, one gradient-only job
-d=$(new_traj methane_force adiab); mkdir -p $d/JOB_AD; sed -e '/CALC_NAC/d' -e 's/^METHOD .*/&\n! from JOB_AD/' $d/JOB_NAD/qchem.inp > $d/JOB_AD/qchem.inp; echo 1 > $d/type_of_dyn.out
+d=$(new_traj methane_force adiab); mkdir -p $d/JOB_AD; sed -e '/CALC_NAC/d' -e 's/^METHOD .*/&\n! from JOB_AD/' $d/JOB_NAD/qchem.inp > $d/JOB_AD/qchem.inp; echo 1 > $d/typeofdyn.out
 if step $d $HERE/data/methane_force/outputs/0.0000.out.gz 0; then
   grep -q '! from JOB_AD' $d/qchem.inp && grep -q 'JOBTYPE *FORCE' $d/qchem.inp && ! grep -q '^@@@' $d/qchem.inp && [ -s $d/grad ] \
-    && ok "type_of_dyn.out = 1: one gradient-only job built from JOB_AD/qchem.inp" || bad "adiabatic step: wrong input"
+    && ok "typeofdyn.out = 1: one gradient-only job built from JOB_AD/qchem.inp" || bad "adiabatic step: wrong input"
 else bad "adiabatic step stopped: $(tail -1 $d/../snap/0.0000.log)"; fi
 
 d=$(new_traj methane_full e_vdoth1); printf ' &shinp\n vdoth = 1\n/\n' > $d/sh.inp
@@ -223,6 +223,11 @@ for pair in ip:methane_cation_eomip_full ea:methyl_radical_eomea ee:methaniminiu
   cmp -s $HERE/../docs/templates/$t.qchem.inp $HERE/../examples/$ex/JOB_NAD/qchem.inp \
     && ok "docs/templates/$t.qchem.inp matches examples/$ex" || bad "docs/templates/$t.qchem.inp differs from examples/$ex/JOB_NAD/qchem.inp"
 done
+
+# 12. Q-Chem frequencies to NewtonX initcond input (tools/qchem_freq_to_nx.py)
+o=$WORK/freq_ch4; python3 $HERE/../tools/qchem_freq_to_nx.py $HERE/data/freq_ch4/ch4_freq.out $o > /dev/null 2>&1
+cmp -s $o/molden.freq $HERE/data/freq_ch4/expected.molden.freq && cmp -s $o/geom $HERE/data/freq_ch4/expected.geom \
+  && ok "qchem_freq_to_nx.py: 6 zero modes added, geom in bohr (methane)" || bad "qchem_freq_to_nx.py output differs from tests/data/freq_ch4"
 
 echo "$pass passed, $fail failed"
 [ $fail -eq 0 ]

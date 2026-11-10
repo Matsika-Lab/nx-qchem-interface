@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Compare EOM-CC energies, target-state gradient and NACs of Q-Chem outputs against a reference.
-usage: compare_outputs.py REF.out OUT.out [OUT.out ...]"""
-import re, sys, numpy as np
+usage: compare_qchem_outputs.py REF.out OUT.out [OUT.out ...]   (gzipped .out.gz files are read too)"""
+import gzip, re, sys, numpy as np
 def parse(f):
-    L = open(f).read().splitlines(); E = []; G = {}; D = {}; A = B = None; full = None
+    L = (gzip.open(f, 'rt') if f.endswith('.gz') else open(f)).read().splitlines(); E = []; G = {}; D = {}; A = B = None; full = None
     for i, l in enumerate(L):
         if re.match(r'\s*EOM[A-Z]+ transition\s+\d+/', l):
             m = re.search(r'Total energy\s*=\s*(-?\d+\.\d+)', L[i + 1]); E.append(float(m.group(1)))

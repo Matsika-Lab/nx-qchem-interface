@@ -90,7 +90,7 @@ $block{check_thirdparty} = <<'EOF';
          # Templates: JOB_NAD/qchem.inp (coupling steps) and/or JOB_AD/qchem.inp
          # (gradient-only steps: adiabatic or mixed dynamics, and vdoth = 2)
          my $qcvd = getkeyword("sh.inp","vdoth",0);
-         if (($qcvd != 0) and ($qcvd != 2)){exit_error("vdoth = $qcvd is not available with Q-Chem EOM-CC. Use 0 (coupling vectors) or 2 (time-dependent Baeck-An).",$mdle);}
+         if (($qcvd != 0) and ($qcvd != 2)){exit_error("vdoth = $qcvd is not supported with Q-Chem EOM-CC. Use 0 (coupling vectors) or 2 (time-dependent Baeck-An).",$mdle);}
          my $qcfound = 0;
          foreach my $qcdir ($JND, $JAD){
            my $qctpl = "$qcdir/qchem.inp";
@@ -99,8 +99,8 @@ $block{check_thirdparty} = <<'EOF';
            open(my $qcfh, '<', $qctpl) or exit_error("Cannot open $qctpl.",$mdle);
            my $qctxt = join("", <$qcfh>);
            close($qcfh);
-           if ($qctxt !~ /^\s*SYM_IGNORE\s*=?\s*(TRUE|1)\b/mi){exit_error("$qctpl must contain SYM_IGNORE TRUE.",$mdle);}
-           if (($qcdir eq $JND) and ($qcvd == 0) and ($qctxt !~ /^\s*CALC_NAC\b/mi)){exit_error("$qctpl must contain CALC_NAC 2 for vdoth = 0.",$mdle);}
+           if ($qctxt !~ /^\s*SYM_IGNORE\s*=?\s*(TRUE|1)\b/mi){exit_error("$qctpl must contain 'SYM_IGNORE TRUE' (states are addressed as [1,n]).",$mdle);}
+           if (($qcdir eq $JND) and ($qcvd == 0) and ($qctxt !~ /^\s*CALC_NAC\b/mi)){exit_error("$qctpl must contain 'CALC_NAC 2' for coupling vectors (vdoth = 0 in sh.inp).",$mdle);}
            if (($qcdir eq $JND) and ($qcvd == 0) and ($qctxt =~ /^\s*SF_STATES\b/mi)){print_STDOUT("\tWARNING: EOM-SF coupling vectors are not documented in the Q-Chem manual (EOM-CC couplings are listed for EE, IP and EA). Check them before production use, or use vdoth = 2.\n");}
          }
          if ($qcfound == 0){exit_error("Cannot find a Q-Chem template ($JND/qchem.inp or $JAD/qchem.inp).",$mdle);}

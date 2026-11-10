@@ -28,7 +28,7 @@
 #   4. keeps the sign of every coupling vector continuous in time.
 #
 # Settings are read from qchem.par in the trajectory directory (optional).
-# See README.md for the list of keywords.
+# See docs/par-reference.md for the list of keywords.
 #
 #====================================================================================
 #
@@ -46,7 +46,7 @@ use colib_perl;
 # ===================================================================================
 my %par = (
     nt                  => 4,       # threads for Q-Chem (qchem -nt)
-    nac_mode            => "nx",    # nx | full | carry | active (see README)
+    nac_mode            => "nx",    # nx | full | carry | active (see docs/couplings.md)
     reuse_guess         => 1,       # start each SCF from the previous step's orbitals
     archive             => 1,       # keep each step's Q-Chem output in INFO_RESTART/qchem_outputs
     archive_interval    => 1,       # archive every n-th step
@@ -389,9 +389,9 @@ sub saved_orbitals {
 sub find_typeofinput {
     #
     # Adiabatic (JOB_AD) or nonadiabatic (JOB_NAD) input. NewtonX uses JOB_AD for
-    # adiabatic steps (type 1 in type_of_dyn.out) and whenever vdoth != 0.
+    # adiabatic steps (type 1 in typeofdyn.out, written by NewtonX) and whenever vdoth != 0.
     #
-    my $typeout = "type_of_dyn.out";
+    my $typeout = "typeofdyn.out";
     $type = 2;
     if ( -s $typeout ) {
         open( my $fh, '<', $typeout ) or die "$mdle Cannot open $typeout";
@@ -919,7 +919,7 @@ sub align_unreferenced_pairs {
         next if $nold * $ncur > $eps;    # escalar has a t-dt reference (same test as escalar)
 
         if ( !exists $ref->{$k} ) {
-            print_STDOUT( "$mdle Coupling pair $k: first appearance, sign kept as computed.\n", $istep, $kt )
+            print_STDOUT( "$mdle Coupling pair $k (states " . pair_name($k) . "): first appearance, sign kept as computed.\n", $istep, $kt )
                 if $istep > 0;
             next;
         }
@@ -932,11 +932,11 @@ sub align_unreferenced_pairs {
             $hy[$k][$ia] *= $sign;
             $hz[$k][$ia] *= $sign;
         }
-        print_STDOUT( sprintf( "$mdle Coupling pair %d: aligned to stored reference from t=%s (cos=%+.4f, phase=%+d)\n",
-            $k, $ref->{$k}{t}, $cos, $sign ), $istep, $kt );
+        print_STDOUT( sprintf( "$mdle Coupling pair %d (states %s): aligned to stored reference from t=%s (cos=%+.4f, phase=%+d)\n",
+            $k, pair_name($k), $ref->{$k}{t}, $cos, $sign ), $istep, $kt );
         if ( abs($cos) < $par{phase_warn} ) {
-            print_STDOUT( sprintf( "$mdle WARNING: coupling pair %d is nearly orthogonal to its stored reference (|cos|=%.3f); its sign is uncertain.\n",
-                $k, abs($cos) ), $istep, $kt );
+            print_STDOUT( sprintf( "$mdle WARNING: coupling pair %d (states %s) is nearly orthogonal to its stored reference (|cos|=%.3f); its sign is uncertain.\n",
+                $k, pair_name($k), abs($cos) ), $istep, $kt );
         }
     }
 }
