@@ -50,7 +50,7 @@ perl -I$NX/lib -Mcolib_perl -e 'print scalar test_list(-1), "\n"' > test.inp   #
 $NX/test-nx.pl > test-nx.log
 ```
 
-`test-nx.log` should end with `Normal termination of all tests.` It may add that `dyn.out` differs from the standard results with "only minor numerical differences": multithreaded Q-Chem changes the last digits of the amplitudes, and this is expected.
+`test-nx.log` should end with `Normal termination of all tests.` It may add that one file differs from the standard results with differences that "do not seem to be relevant": multithreaded Q-Chem changes the last digits of the amplitudes, and this is expected. Checked with NewtonX 2.4-B06, where the Q-Chem test is number 50, and 2.6-B01, where it is number 65.
 
 ## Updating
 
@@ -58,5 +58,6 @@ Pull the repository and run `perl nx/install.pl` again. Running trajectories cal
 
 ## See also
 
-- [Your first trajectory](first-trajectory.md)
-- [Troubleshooting](troubleshooting.md)
+- [Your first trajectory](first-trajectory.md): set up and run a trajectory
+- [Development and testing](development.md): what the tests check
+- [Troubleshooting](troubleshooting.md): error messages

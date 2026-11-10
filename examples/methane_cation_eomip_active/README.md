@@ -1,4 +1,4 @@
-[Home](../../README.md) / [Examples](../README.md) / Methane cation, EOM-IP-CCSD, `nac_mode = active`
+[Home](../../README.md) / [Examples](../README.md) / Methane cation (CH₄⁺), EOM-IP-CCSD, `nac_mode = active`
 
 # Methane cation (CH₄⁺), EOM-IP-CCSD, `nac_mode = active`
 
@@ -12,7 +12,7 @@ The methane cation started on its third state, relaxing through the Jahn–Telle
 | Thresholds | `SCF_CONVERGENCE 9`, `CC_CONVERGENCE 9`, `EOM_DAVIDSON_CONVERGENCE 9` |
 | Dynamics | dt 0.25 fs, `tmax` 50 fs, `seed = 20261109` |
 | Initial condition | 0 K Wigner sample from MP2/cc-pVDZ frequencies of CH₄ |
-| Cost | about 29 s per step on 4 cores (median, with other jobs sharing the node) |
+| Cost | 27 s per step on 4 cores (median Q-Chem wall time, with other jobs sharing the node; [Validation](../../docs/validation.md#7-cost-per-step-of-the-examples)) |
 
 ## Result
 
@@ -21,7 +21,7 @@ The methane cation started on its third state, relaxing through the Jahn–Telle
 *State energies with the active state, populations, |v·d| for each pair, total-energy change, one C–H distance and one H–C–H angle. Dotted lines: hops.*
 
 - **Hops** 3 → 2 at 1.75 fs and 2 → 1 at 11.5 fs, each where the two states come within 0.04 eV of each other. The trajectory then stays on state 1 to 50 fs.
-- **All three modes give the same trajectory** here: the same hops, total energies equal to within 0.01 meV at every step, and populations that differ by at most 0.006. For this trajectory, the pair that the cheaper modes skip or carry, between the two inactive states, has almost no influence. See the [comparison](../../docs/benchmarks/README.md#coupling-modes).
+- **All three modes give the same trajectory** here: the same hops, total energies equal to within 0.01 meV at every step, and populations that differ by at most 0.006. For this trajectory, the pair that the cheaper modes skip or carry, between the two inactive states, has almost no influence. See the [comparison](../../docs/validation.md#coupling-modes).
 - **Energy conservation.** Within −12 to +17 meV up to 11 fs, and within 8 meV from 13 fs on. Between them, around the 2 → 1 hop, the total energy drops by about 95 meV over two steps. The hop itself conserves energy exactly (`RESULTS/sh.out`). The loss comes from the steps around it: S₁ and S₂ are 38 meV apart there, so the gradient of the active state changes faster than a 0.25 fs step can follow. A smaller `dt` near such crossings reduces it. All three modes have the same drop, so it does not come from the coupling mode.
 
 ## Files

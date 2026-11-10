@@ -71,7 +71,7 @@ Any NewtonX initial-condition method works; to check vertical energies and inten
 nt = 4          # threads per Q-Chem run
 ```
 
-The defaults suit most runs. See the [settings reference](par-reference.md) for every option.
+The defaults suit most runs. See the [settings reference](qchem-par.md) for every option.
 
 ## 6. Make hops reproducible (`sh.inp`)
 
@@ -122,10 +122,10 @@ State energies (a.u.):
 python3 /path/to/nx-qchem-interface/tools/plot_trajectory.py TRAJ1 --title "My molecule"
 ```
 
-Run it from the folder that holds `TRAJ1`. The figure goes to `TRAJ1/plots/overview.png`. It draws the state energies, populations, coupling strengths and energy conservation; see [Outputs, plots and tests](outputs.md).
+Run it from the folder that holds `TRAJ1`. The figure goes to `TRAJ1/plots/overview.png`. It draws the state energies, populations, coupling strengths and energy conservation; see [Outputs and plots](outputs.md).
 
-## Next
+## See also
 
-- [Method tutorials](methods/README.md)
-- [Couplings and coupling modes](couplings.md)
-- [Troubleshooting](troubleshooting.md)
+- [Method tutorials](methods/README.md): templates and pitfalls for each EOM method
+- [Couplings](couplings.md): coupling vectors, Baeck-An couplings and coupling modes
+- [Troubleshooting](troubleshooting.md): error messages
